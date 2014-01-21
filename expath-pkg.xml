@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.3" spec="1.0">
+    <title>JMMC Commons module</title>
+    <dependency package="http://exist-db.org/apps/shared"/>
+    <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/auth</namespace>
+        <file>jmmc-auth.xql</file>
+    </xquery>
+    <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/dateutil</namespace>
+        <file>jmmc-dateutil.xql</file>
+    </xquery>
+    <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/oival</namespace>
+        <file>jmmc-oival.xql</file>
+    </xquery>
+</package>

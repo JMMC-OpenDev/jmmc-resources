@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta xmlns="http://exist-db.org/xquery/repo">
+    <description>Shared resources mainly used by jmmc apps</description>
+    <author>JMMC tech group</author>
+    <website/>
+    <status>stable</status>
+    <license>GNU-LGPL</license>
+    <copyright>true</copyright>
+    <type>library</type>
+    <target>jmmc-resources</target>
+    <prepare/>
+    <finish/>
+    <permissions user="admin" password="" group="dba" mode="0775"/>
+    <changelog>
+        <change version="0.3">
+            <ul xmlns="">
+                <li>Fix MJD bug</li>
+            </ul>
+        </change>
+        <change version="0.2">
+            <ul xmlns="">
+                <li>Updated with jmmc-auth.xql module</li>
+            </ul>
+        </change>
+        <change version="0.1">
+            <ul xmlns="">
+                <li>First revision</li>
+            </ul>
+        </change>
+    </changelog>
+    <deployed>2014-01-20T17:15:51.288+01:00</deployed>
+</meta>
