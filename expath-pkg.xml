@@ -7,6 +7,10 @@
         <file>jmmc-auth.xql</file>
     </xquery>
     <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/astro</namespace>
+        <file>jmmc-astro.xql</file>
+    </xquery>
+    <xquery>
         <namespace>http://exist.jmmc.fr/jmmc-resources/dateutil</namespace>
         <file>jmmc-dateutil.xql</file>
     </xquery>
