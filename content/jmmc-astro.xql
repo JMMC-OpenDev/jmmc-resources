@@ -49,13 +49,19 @@ function jmmc-astro:to-dms($x as xs:double) as xs:string{
  : @param $s a string of three values for degrees minutes and seconds,
  :           space- or colon-separated
  : @return the declination in degrees 
- : @todo check return value: if NaN, format error
+ : @error failed to parse declination
  :)
 declare
     %test:arg("s", "57:14:12.3")
     %test:assertEquals(57.23675)
+    %test:arg("s", "bad dms")
+    %test:assertError("jmmc-astro:format")
 function jmmc-astro:from-dms($s as xs:string) as xs:double {
-    alx:parse-d-e-c($s)
+    let $dec := alx:parse-d-e-c($s)
+    return if (string($dec) = 'NaN') then
+        error(xs:QName('jmmc-astro:format'), 'Failed to parse declination "' || $s || '"')
+    else
+        $dec
 };
 
 (:~
@@ -64,13 +70,19 @@ function jmmc-astro:from-dms($s as xs:string) as xs:double {
  : @param $s a string of three values for hours minutes and seconds,
  :           space- or colon-separated
  : @return the right ascension in degrees
- : @todo check return value: if NaN, format error
+ : @error failed to parse right ascension
  :)
 declare
     %test:arg("s", "1 37 42.0")
     %test:assertEquals(24.425)
+    %test:arg("s", "bad hms")
+    %test:assertError("jmmc-astro:format")
 function jmmc-astro:from-hms($s as xs:string) as xs:double {
-    alx:parse-r-a($s)
+    let $ra := alx:parse-r-a($s)
+    return if (string($ra) = 'NaN') then
+        error(xs:QName('jmmc-astro:format'), 'Failed to parse right ascension "' || $s || '"')
+    else
+        $ra
 };
 
 (:~
