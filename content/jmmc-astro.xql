@@ -1,10 +1,10 @@
 xquery version "3.0";
 
 (:~
- : Helper functions to convert star coordinates between different formats.
+ : Helper functions to convert star coordinates between different
+ : formats and retrieve band limits
  : 
- : Based on the jmal package (fr.jmmc.jmal). Require the jmal JAR file in
- : the content/ directory.
+ : Based on the jmal package (fr.jmmc.jmal).
  : 
  : Todo: - fix the bad format issue with to-dms, to-hms
  :       - add note on locale dependency (numeric delimiter in seconds)
@@ -15,6 +15,7 @@ module namespace jmmc-astro="http://exist.jmmc.fr/jmmc-resources/astro";
 import module namespace test="http://exist-db.org/xquery/xqsuite" at "resource:org/exist/xquery/lib/xqsuite/xqsuite.xql";
 
 declare namespace alx="java:fr.jmmc.jmal.ALX";
+declare namespace band="java:fr.jmmc.jmal.Band";
 
 (:~
  : Convert a right ascension in degree to a sexagesimal time (hms).
@@ -70,4 +71,34 @@ declare
     %test:assertEquals(24.425)
 function jmmc-astro:from-hms($s as xs:string) as xs:double {
     alx:parse-r-a($s)
+};
+
+(:~
+ : Return the lower and upper wavelengths of the given band in microns.
+ : 
+ : @param $band-name the name of the band
+ : @return a sequence of two numbers for lower and upper wavelengths
+ : @error unknown band
+ :)
+declare
+    %test:arg("band-name", "U")
+    %test:assertEquals(0.30100000000000005, 0.367)
+function jmmc-astro:wavelength-range($band-name as xs:string) as item()* {
+    let $band := band:values()[band:getName(.) = $band-name]
+    return 
+        if (empty($band)) then
+            error(xs:QName('jmmc-astro'), 'Unknown band: ' || $band-name)
+        else
+            let $lambda    := band:get-lambda($band)
+            let $half-bandwidth := band:get-band-width($band) div 2
+            return ( $lambda - $half-bandwidth, $lambda + $half-bandwidth)
+};
+
+(:~
+ : Return a list of all band names.
+ : 
+ : @return a sequence of strings with band ids
+ :)
+declare function jmmc-astro:band-names() as item()* {
+    for $b in band:values() return band:get-name($b)
 };
