@@ -5,9 +5,6 @@ xquery version "3.0";
  : formats and retrieve band limits
  : 
  : Based on the jmal package (fr.jmmc.jmal).
- : 
- : Todo: - fix the bad format issue with to-dms, to-hms
- :       - add note on locale dependency (numeric delimiter in seconds)
  :)
 
 module namespace jmmc-astro="http://exist.jmmc.fr/jmmc-resources/astro";
