@@ -25,7 +25,7 @@ declare namespace band="java:fr.jmmc.jmal.Band";
  :)
 declare
     %test:arg("x", 24.429284)
-    %test:assertEquals("1:37:43.028")
+    %test:assertEquals("01:37:43.028")
 function jmmc-astro:to-hms($x as xs:double) as xs:string {
     alx:to-h-m-s($x)
 };
@@ -38,7 +38,7 @@ function jmmc-astro:to-hms($x as xs:double) as xs:string {
  :)
 declare
     %test:arg("x", 57.23675)
-    %test:assertEquals("57:14:12.3")
+    %test:assertEquals("+57:14:12.300")
 function jmmc-astro:to-dms($x as xs:double) as xs:string{
     alx:to-d-m-s($x)
 };
