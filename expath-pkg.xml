@@ -18,4 +18,8 @@
         <namespace>http://exist.jmmc.fr/jmmc-resources/oival</namespace>
         <file>jmmc-oival.xql</file>
     </xquery>
+    <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/ads</namespace>
+        <file>jmmc-ads.xql</file>
+    </xquery>
 </package>
