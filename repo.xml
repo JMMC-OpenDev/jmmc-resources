@@ -12,6 +12,11 @@
     <finish/>
     <permissions user="admin" password="" group="dba" mode="0775"/>
     <changelog>
+        <change version="0.4">
+            <ul xmlns="">
+                <li>Add first basic ADS module</li>
+            </ul>
+        </change>
         <change version="0.3">
             <ul xmlns="">
                 <li>Fix MJD bug</li>
@@ -28,5 +33,4 @@
             </ul>
         </change>
     </changelog>
-    <deployed>2014-01-20T17:15:51.288+01:00</deployed>
 </meta>
