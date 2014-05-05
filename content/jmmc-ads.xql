@@ -19,7 +19,7 @@ declare variable $jmmc-ads:ADS_HOST := "http://cdsads.u-strasbg.fr";
  base of urls to get ads abstract records in xml format.
  Some parameters may be appended to query by authors or bibcodes
  :) 
-declare variable $jmmc-ads:absAccesspointUrl := xs:anyURI($jmmc-ads:ADS_HOST||"//cgi-bin/nph-abs_connect?data_type=XML");
+declare variable $jmmc-ads:abs-accesspoint-url := xs:anyURI($jmmc-ads:ADS_HOST||"//cgi-bin/nph-abs_connect?data_type=XML");
 
 
 declare variable $jmmc-ads:MONTHS := <months><m><n>Jan</n><v>01</v></m><m><n>Feb</n><v>02</v></m><m><n>Mar</n><v>03</v></m><m><n>Apr</n><v>04</v></m><m><n>May</n><v>05</v></m><m><n>Jun</n><v>06</v></m><m><n>Jul</n><v>07</v></m><m><n>Aug</n><v>08</v></m><m><n>Sep</n><v>09</v></m><m><n>Oct</n><v>10</v></m><m><n>Nov</n><v>11</v></m><m><n>Dec</n><v>12</v></m><m><n>n/a</n><v>01</v></m></months>;
@@ -27,13 +27,13 @@ declare variable $jmmc-ads:MONTHS := <months><m><n>Jan</n><v>01</v></m><m><n>Feb
 
 
 (:~ 
- : Get ads record for the given bibcode.
+ : get ads record for the given bibcode.
  : @param $bibcode given bibcode 
  : @return an ads record or empty sequence
  :)
-declare function jmmc-ads:getRecord($bibcode as xs:string) as node()?
+declare function jmmc-ads:get-record($bibcode as xs:string) as node()?
 {
-    jmmc-ads:getRecords(($bibcode))
+    jmmc-ads:get-records(($bibcode))
 };
 
 (:~ 
@@ -41,10 +41,10 @@ declare function jmmc-ads:getRecord($bibcode as xs:string) as node()?
  : @param $bibcodes list of bibcodes
  : @return some ads records or empty sequence
  :)
-declare function jmmc-ads:getRecords($bibcodes as xs:string*) as node()*
+declare function jmmc-ads:get-records($bibcodes as xs:string*) as node()*
 {
     let $params := for $b in $bibcodes return "&amp;bibcode="||encode-for-uri($b)
-    return doc($jmmc-ads:absAccesspointUrl||$params)//ads:record
+    return doc($jmmc-ads:abs-accesspoint-url||$params)//ads:record
 };
 
 (:~ 
@@ -52,10 +52,10 @@ declare function jmmc-ads:getRecords($bibcodes as xs:string*) as node()*
  : @param $record input ads record 
  : @return the publication date
  :)
-declare function jmmc-ads:getPubDate($record as node()) as xs:date
+declare function jmmc-ads:get-pub-date($record as node()) as xs:date
 {
   let $pubdate := $record/ads:pubdate/text()
-  return jmmc-ads:formatPubDate($pubdate)
+  return jmmc-ads:format-pub-date($pubdate)
 };
 
 (:~ 
@@ -63,7 +63,7 @@ declare function jmmc-ads:getPubDate($record as node()) as xs:date
  : @param $pubdate publication date in ADS format 
  : @return the publication date
  :)
-declare function jmmc-ads:formatPubDate($pubdate as xs:string) as xs:date
+declare function jmmc-ads:format-pub-date($pubdate as xs:string) as xs:date
 {
   let $y := replace($pubdate,'[^\d]','')
   let $m := replace($pubdate,'[\d]| ','')
@@ -76,9 +76,20 @@ declare function jmmc-ads:formatPubDate($pubdate as xs:string) as xs:date
  : @param $record input ads record 
  : @return first author
  :)
-declare function jmmc-ads:getFirstAuthor($record as element()) as xs:string
+declare function jmmc-ads:get-first-author($record as element()) as xs:string
 {
     $record/ads:author[1]
+};
+
+
+(:~ 
+ : Get keywords of given ads record
+ : @param $record input ads record 
+ : @return list of keywords
+ :)
+declare function jmmc-ads:get-keywords($record as element()) as xs:string*
+{
+    $record//ads:keyword/text()
 };
 
 
