@@ -43,7 +43,8 @@ declare function jmmc-ads:get-record($bibcode as xs:string) as node()?
  :)
 declare function jmmc-ads:get-records($bibcodes as xs:string*) as node()*
 {
-    let $params := for $b in $bibcodes return "&amp;bibcode="||encode-for-uri($b)
+    let $params := string-join(for $b in $bibcodes return "&amp;bibcode="||encode-for-uri($b),"")
+    let $params := $params || "&amp;nr_to_return="||count($bibcodes)
     return doc($jmmc-ads:abs-accesspoint-url||$params)//ads:record
 };
 
