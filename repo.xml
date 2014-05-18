@@ -12,6 +12,11 @@
     <finish/>
     <permissions user="admin" password="" group="dba" mode="0775"/>
     <changelog>
+        <change version="0.5">
+            <ul xmlns="">
+                <li>Add jmmc-about module for templating repo.xml of applications</li>
+            </ul>
+        </change>
         <change version="0.4">
             <ul xmlns="">
                 <li>Add first basic ADS module</li>

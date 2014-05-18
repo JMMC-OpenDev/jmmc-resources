@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.4" spec="1.0">
+<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.5" spec="1.0">
     <title>JMMC Commons module</title>
     <dependency package="http://exist-db.org/apps/shared"/>
     <xquery>
@@ -21,5 +21,9 @@
     <xquery>
         <namespace>http://exist.jmmc.fr/jmmc-resources/ads</namespace>
         <file>jmmc-ads.xql</file>
+    </xquery>
+    <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/about</namespace>
+        <file>jmmc-about.xql</file>
     </xquery>
 </package>
