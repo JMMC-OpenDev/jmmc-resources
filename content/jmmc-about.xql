@@ -58,7 +58,7 @@ declare
     %templates:wrap
 function jmmc-about:changelog($node as node(), $model as map(*)) as map(*) {
     let $app-root := $model($templates:CONFIGURATION)($templates:CONFIG_APP_ROOT)
-    return map:new(($model,map { "changes" := jmmc-about:changelog($app-root) }))
+    return map { "changes" := jmmc-about:changelog($app-root) }
 };
 
 
