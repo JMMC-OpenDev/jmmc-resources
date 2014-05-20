@@ -21,6 +21,11 @@ xquery version "3.0";
  :           </div>
  :       </div>
  :   </div>
+ : 
+ : It is also necessary to set-up the templating framework of the application
+ : to look for the functions of this module. To do so, add the following line
+ : to the 'view.xql' of the application:
+ : import module namespace jmmc-about="http://exist.jmmc.fr/jmmc-resources/about";
  :)
 
 module namespace jmmc-about="http://exist.jmmc.fr/jmmc-resources/about";
