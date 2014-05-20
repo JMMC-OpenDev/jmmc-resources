@@ -113,8 +113,16 @@ declare function jmmc-about:change($node as node(), $model as map(*)) as node()*
     $model("change")/*
 };
 
+(:~
+ : Return the version number of a change in the model.
+ : 
+ : Version number is an attribute on the element associated to the 'change' key
+ : of the model.
+ : 
+ : @param $node
+ : @param $model
+ : @return the version number as a string 
+ :)
 declare function jmmc-about:change-version($node as node(), $model as map(*)) as xs:string {
     data($model("change")/@version)
 };
-
-
