@@ -2,6 +2,7 @@
 <package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.6" spec="1.0">
     <title>JMMC Commons module</title>
     <dependency package="http://exist-db.org/apps/shared"/>
+    <dependency package="http://expath.org/lib/ft-client"/>
     <xquery>
         <namespace>http://exist.jmmc.fr/jmmc-resources/auth</namespace>
         <file>jmmc-auth.xql</file>
