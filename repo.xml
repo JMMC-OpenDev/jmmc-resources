@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <meta xmlns="http://exist-db.org/xquery/repo">
     <description>Shared resources mainly used by jmmc apps</description>
     <author>JMMC tech group</author>
@@ -12,6 +11,11 @@
     <finish/>
     <permissions user="admin" password="" group="dba" mode="0775"/>
     <changelog>
+        <change version="0.6">
+            <ul xmlns="">
+                <li>add jmmc-oiexplorer to provide an oi extension to exist-db. oi:to-xml is the first implemented function.</li>
+            </ul>
+        </change>
         <change version="0.5">
             <ul xmlns="">
                 <li>Add jmmc-about module for templating repo.xml of applications</li>
