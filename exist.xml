@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://exist-db.org/ns/expath-pkg">
+  
+    <!-- see jmal maven module to get following jars -->
     <jar>jmal.jar</jar>
+
+    <!-- see oiexplorer-existdb maven module to get following jars 
+         e.g. : cp $(find $HOME/NetBeans/oiexplorer-existdb/ -name *-TRUNK.jar) content
+      -->
+    <jar>oiexplorer-existdb-TRUNK.jar</jar>
+    <jar>oitools-TRUNK.jar</jar>
+    <java>
+      <namespace>http://exist.jmmc.fr/extension/oiexplorer</namespace>
+      <class>fr.jmmc.exist.OIExplorerModule</class>
+    </java>
+
 </package>
