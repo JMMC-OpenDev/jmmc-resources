@@ -93,9 +93,8 @@ function jmmc-about:version($node as node(), $model as map(*)) as xs:string? {
  :)
 declare
     %templates:wrap
-function jmmc-about:version-as-attribute($node as node(), $model as map(*), $attrname as xs:string) as attribute() {
-     let $app-root := $model("app-root")
-    let $changes := doc($app-root || '/repo.xml')//change
+function jmmc-about:version-as-attribute($node as node(), $model as map(*), $attrname as xs:string) as attribute() {    
+    let $changes := $model("changes")
     return attribute { $attrname }  { $changes[@version=max($changes/@version)]/@version }
 };
 
