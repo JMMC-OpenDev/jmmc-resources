@@ -53,6 +53,7 @@ declare function jmmc-web:navbar-li($node as node(), $model as map(*)) as node()
     <li><a href="http://www.jmmc.fr/applauncher_page.htm">AppLauncher</a></li>
     <li><a href="http://apps.jmmc.fr/badcal">BadCal</a></li>
     <li><a href="http://www.jmmc.fr/./catalogue_calex.htm">CalEx</a></li>
+	<li><a href="http://www.jmmc.fr/./oidb.htm">OiDB</a></li>
     <li><a href="http://www.jmmc.fr/catalogue_jsdc.htm">JSDC</a></li>
     </ul>
     </li>
