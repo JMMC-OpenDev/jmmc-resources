@@ -79,7 +79,7 @@ declare function jmmc-ads:format-pub-date($pubdate as xs:string) as xs:date
  :)
 declare function jmmc-ads:get-first-author($record as element()) as xs:string
 {
-    $record/ads:author[1]
+    jmmc-ads:get-authors($record)[1]
 };
 
 
@@ -93,6 +93,24 @@ declare function jmmc-ads:get-keywords($record as element()) as xs:string*
     $record//ads:keyword/text()
 };
 
+(:~
+ : Get list of authors of given ADS record.
+ : 
+ : @param $record input ADS record
+ : @return list of author names
+ :)
+declare function jmmc-ads:get-authors($record as element()) as xs:string*
+{
+    $record/ads:author
+};
 
-
-
+(:~
+ : Get the document title from a given ADS record.
+ : 
+ : @param $record input ADS record
+ : @return the document title
+ :)
+declare function jmmc-ads:get-title($record as element()) as xs:string
+{
+    $record/ads:title    
+};
