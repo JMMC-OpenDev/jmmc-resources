@@ -26,12 +26,15 @@ declare variable $jmmc-vizier:VIZIER_CATALOGS := 'http://cdsarc.u-strasbg.fr/viz
  : 
  : @param $name a catalog identifier
  : @return the text of the catalog description file
+ : @error catalog description not found
  :)
-declare function jmmc-vizier:catalog($name as xs:string) as xs:string {
+declare function jmmc-vizier:catalog($name as xs:string) as xs:string? {
     let $readme-url := resolve-uri($name || '/ReadMe', $jmmc-vizier:VIZIER_CATALOGS)
-    (: TODO error if HTTP GET fails :)
     let $data := httpclient:get($readme-url, false(), <headers/>)
-    return util:base64-decode($data/httpclient:body/text())
+    return if ($data/@statusCode = 200) then
+        util:base64-decode($data/httpclient:body/text())
+    else
+        error(xs:QName('jmmc-vizier:error'), 'Catalog description file not found')
 };
 
 (:~
