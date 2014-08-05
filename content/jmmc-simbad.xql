@@ -74,6 +74,16 @@ declare %private function jmmc-simbad:resolve($query as xs:string) as node()* {
 };
 
 (:~
+ : Try to identify a target from its name with Simbad.
+ : 
+ : @param $identifier the target name
+ : @return a target identifier if target is found or a falsy if target is unknown
+ :)
+declare function jmmc-simbad:resolve-by-name($identifier as xs:string) as item()* {
+    jmmc-simbad:resolve-by-name($identifier, (), ())
+};
+
+(:~
  : Try to identify a target from its fingerprint with Simbad.
  : 
  : @param $identifier the target name
@@ -81,13 +91,15 @@ declare %private function jmmc-simbad:resolve($query as xs:string) as node()* {
  : @param $dec the target declination in degrees
  : @return a target identifier if target is found or a falsy if target is unknown
  :)
-declare function jmmc-simbad:resolve-by-name($identifier as xs:string, $ra as xs:double, $dec as xs:double) as item()* {
-    (: TODO check distance of result from coords :)
-    jmmc-simbad:resolve(
-        "SELECT oid AS id, ra, dec, main_id AS name, DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist " ||
+declare function jmmc-simbad:resolve-by-name($identifier as xs:string, $ra as xs:double?, $dec as xs:double?) as item()* {
+    let $do-dist := ($ra and $dec)
+    let $query := 
+        "SELECT oid AS id, ra, dec, main_id AS name" || (if($do-dist) then ", DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist " else " ") ||
         "FROM basic JOIN ident ON oidref=oid " ||
         "WHERE id = '" || encode-for-uri($identifier) || "' " ||
-        "ORDER BY dist")
+        (if($do-dist) then "ORDER BY dist" else "")
+    (: TODO check distance of result from coords :)
+    return jmmc-simbad:resolve($query)
 };
 
 (:~
