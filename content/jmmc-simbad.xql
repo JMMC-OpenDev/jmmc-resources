@@ -74,6 +74,17 @@ declare %private function jmmc-simbad:resolve($query as xs:string) as node()* {
 };
 
 (:~
+ : Escape a string for ADQL query.
+ : 
+ : @param $str the string to escape
+ : @return the escaped string
+ :)
+declare %private function jmmc-simbad:escape($str as xs:string) as xs:string {
+    (: FIXME more escapes? :)
+    replace($str, "'", "''")
+};
+
+(:~
  : Try to identify a target from its name with Simbad.
  : 
  : @param $identifier the target name
@@ -96,7 +107,7 @@ declare function jmmc-simbad:resolve-by-name($identifier as xs:string, $ra as xs
     let $query := 
         "SELECT oid AS id, ra, dec, main_id AS name" || (if($do-dist) then ", DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist " else " ") ||
         "FROM basic JOIN ident ON oidref=oid " ||
-        "WHERE id = '" || encode-for-uri($identifier) || "' " ||
+        "WHERE id = '" || jmmc-simbad:escape($identifier) || "' " ||
         (if($do-dist) then "ORDER BY dist" else "")
     (: TODO check distance of result from coords :)
     return jmmc-simbad:resolve($query)
