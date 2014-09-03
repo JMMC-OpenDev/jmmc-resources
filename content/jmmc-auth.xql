@@ -9,6 +9,13 @@ module namespace jmmc-auth="http://exist.jmmc.fr/jmmc-resources/auth";
 
 declare variable $jmmc-auth:serviceAccesspointUrl := xs:anyURI('https://jmmc.obs.ujf-grenoble.fr/account/manage.php');
 
+(: Improve this function to get whole email for admin users :)
+declare function jmmc-auth:getObfuscatedEmail($email as xs:string) as xs:string
+{
+  substring-before($email,"@")||"@..."  
+};
+
+
 declare function jmmc-auth:checkPassword($email, $password)
 {
     let $fields :=
