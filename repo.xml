@@ -11,34 +11,43 @@
     <prepare/>
     <finish/>
     <changelog>
+        <change version="0.8">
+            <ul xmlns=""> 
+                <li>New module jmmc-simbad : query CDS-simbad through its TAP interface</li>
+                <li>jmmc-auth : add getObfuscatedEmail()</li>
+                <li>jmmc-vizier : Improve reliability to query VizieR informations</li>
+                <li>jmmc-ads : add new functions</li>
+                <li>jmmc-web : update and improve the jmmc menu</li>
+            </ul>
+        </change>
         <change version="0.7">
             <ul xmlns="">
-                <li>add jmmc-web to provide common material for web site management</li>
+                <li>New module jmmc-web : provide common material for web site management</li>
             </ul>
         </change>
         <change version="0.6">
             <ul xmlns="">
-                <li>add jmmc-oiexplorer to provide an oi extension to exist-db. oi:to-xml is the first implemented function</li>
+                <li>New module jmmc-oiexplorer : provide an oi extension to exist-db. oi:to-xml is the first implemented function</li>
             </ul>
         </change>
         <change version="0.5">
             <ul xmlns="">
-                <li>Add jmmc-about module for templating repo.xml of applications</li>
+                <li>New module jmmc-about : templates release notes from the repo.xml of applications</li>
             </ul>
         </change>
         <change version="0.4">
             <ul xmlns="">
-                <li>Add first basic ADS module</li>
+                <li>New module jmmc-ads :  basic query of ADS</li>
             </ul>
         </change>
         <change version="0.3">
             <ul xmlns="">
-                <li>Fix MJD bug</li>
+                <li>jmmc-date : Fix MJD bug</li>
             </ul>
         </change>
         <change version="0.2">
             <ul xmlns="">
-                <li>Updated with jmmc-auth.xql module</li>
+                <li>New module jmmc-auth.xql : interface to the legacy authentication interface</li>
             </ul>
         </change>
         <change version="0.1">
