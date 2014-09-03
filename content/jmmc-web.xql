@@ -10,6 +10,7 @@ declare namespace xhtml="http://www.w3.org/1999/xhtml";
 
 (:~
  : Return the left menu navbar content for inclusion in bootstrap.
+ : TODO : replace this hard coded fragment by a return of a document located into /db/apps/jmmc-ressources/data/menu.xml
  : @return a li element to include in bootstrap navbar
  :)
 declare function jmmc-web:navbar-li($node as node(), $model as map(*)) as node() {
@@ -46,6 +47,7 @@ declare function jmmc-web:navbar-li($node as node(), $model as map(*)) as node()
     <li><a href="http://www.jmmc.fr/data_analysis.htm">Data Analysis</a><ul>
     <li><a href="http://www.jmmc.fr/litpro_page.htm">LITpro</a></li>
     <li><a href="http://www.jmmc.fr/iper_page.htm">Iper</a></li>
+    <li><a href="http://www.jmmc.fr/wisard_page.htm">Wisard</a></li>
     </ul>
     </li>
     <li><a href="http://www.jmmc.fr/vo_resources.htm"> Virtual Observatory </a>
@@ -71,9 +73,9 @@ declare function jmmc-web:navbar-li($node as node(), $model as map(*)) as node()
  : @return a li element to include in bootstrap navbar
  : NOT TESTED PROPERLY
  :)
-declare function jmmc-web:compute-navbar($node as node(), $model as map(*)) as node() {
+declare function jmmc-web:compute-navbar() as node() {
 let $div:=doc("http://www.jmmc.fr/")//xhtml:div[@id="sectionLinks"]
-return for $l1 in $div/xhtml:li let $a := $l1/xhtml:a let $href := if(contains($a/@href,"//"))  then $a/@href else "http://www.jmmc.fr/"||$a/@href return <li><a href="{$href}">{data($a)}</a>
+let $lis:= for $l1 in $div/xhtml:li let $a := $l1/xhtml:a let $href := if(contains($a/@href,"//"))  then $a/@href else "http://www.jmmc.fr/"||$a/@href return <li><a href="{$href}">{data($a)}</a>
             <ul>
                 {
                     for $a in $l1/xhtml:div/xhtml:a 
@@ -83,5 +85,12 @@ return for $l1 in $div/xhtml:li let $a := $l1/xhtml:a let $href := if(contains($
                 }
             </ul>
         </li>
+        
+    return <li class="dropdown">
+    <a href="#" class="dropdown-toggle" style="padding:12px;" data-toggle="dropdown"><img height="30" src="http://www.jmmc.fr/images/jmmc_large.jpg"/>&#160;<span class="caret"></span></a>
+    <ul class="dropdown-menu">        
+    {$lis}
+    </ul>
+    </li>
 };
 
