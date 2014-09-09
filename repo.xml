@@ -11,6 +11,11 @@
     <prepare/>
     <finish/>
     <changelog>
+        <change version="0.9">
+            <ul xmlns=""> 
+                <li>jmmc-auth : add check-credential() functions and rename all function using the default naming convention</li>
+            </ul>
+        </change>
         <change version="0.8">
             <ul xmlns=""> 
                 <li>New module jmmc-simbad : query CDS-simbad through its TAP interface</li>

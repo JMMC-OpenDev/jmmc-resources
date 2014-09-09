@@ -16,7 +16,13 @@ declare function jmmc-auth:getObfuscatedEmail($email as xs:string) as xs:string
 };
 
 
+(:~ deprecated, use non camelcase function name ~:)
 declare function jmmc-auth:checkPassword($email, $password)
+{
+    jmmc-auth:check-password($email, $password)
+};
+
+declare function jmmc-auth:check-password($email, $password)
 {
     let $fields :=
                    <httpclient:fields>
@@ -29,7 +35,13 @@ declare function jmmc-auth:checkPassword($email, $password)
         exists($postResponse//true)
 };
 
+(:~ deprecated, use non camelcase function name ~:)
 declare function jmmc-auth:getInfo($email)
+{
+    jmmc-auth:get-info($email)
+};
+
+declare function jmmc-auth:get-info($email)
 {
     if($email) then
     let $fields :=
@@ -40,25 +52,58 @@ declare function jmmc-auth:getInfo($email)
         let $postResponse := httpclient:post-form($jmmc-auth:serviceAccesspointUrl, $fields, false(), ())
         let $resp := $postResponse//response[1]
         return
-            <author><email>{ $email }</email>{ $resp/name }{ $resp/affiliation }</author>
+            <author><email>{ $email }</email>{ $resp/* }</author>
     else
         ()
 };
 
+(:~ deprecated, use non camelcase function name ~:)
 declare function jmmc-auth:getInfo()
 {
-    jmmc-auth:getInfo(session:get-attribute("email"))
+    jmmc-auth:get-info()
+};
+
+(:~ deprecated, use non camelcase function name ~:)
+declare function jmmc-auth:get-info()
+{
+    jmmc-auth:get-info(session:get-attribute("email"))
+};
+
+declare function jmmc-auth:check-credential($email as xs:string, $crendential as xs:string) as xs:boolean
+{
+    let $info := jmmc-auth:get-info($email)
+    return exists($info//credential/*[lower-case(name())=lower-case($crendential)])
 };
 
 
+declare function jmmc-auth:check-credential($crendential as xs:string) as xs:boolean
+{
+    let $info := jmmc-auth:get-info()
+    return exists($info//credential/*[lower-case(name())=lower-case($crendential)])
+};
+
+(:~ deprecated, use non camelcase function name ~:)
 declare function jmmc-auth:isLogged($email)
+{
+    jmmc-auth:is-logged($email)
+};
+ 
+
+declare function jmmc-auth:is-logged($email)
 {
     let $attr := session:get-attribute("email") = $email
     (: if($attr) :)
     return $attr
 };
 
+(:~ deprecated, use non camelcase function name ~:)
 declare function jmmc-auth:isLogged()
+{
+     jmmc-auth:is-logged()
+};
+
+
+declare function jmmc-auth:is-logged()
 {
     session:get-attribute("email")
 };
@@ -79,7 +124,12 @@ declare function jmmc-auth:logout()
 };
 
 
+(:~ deprecated, use non camelcase function name ~:)
 declare function jmmc-auth:showLoginForm($node as node()?, $model as map(*)?, $email as xs:string?, $password as xs:string?, $action as xs:string?) {
+    jmmc-auth:show-login-form($node, $model, $email, $password, $action) 
+};
+
+declare function jmmc-auth:show-login-form($node as node()?, $model as map(*)?, $email as xs:string?, $password as xs:string?, $action as xs:string?) {
  let $email := $email
  let $logout := if($action="logout") then jmmc-auth:logout() else ()
  let $testLogin := if($email and $password) then jmmc-auth:login($email, $password) else ()
@@ -100,7 +150,12 @@ declare function jmmc-auth:showLoginForm($node as node()?, $model as map(*)?, $e
          </p>
 };
 
+(:~ deprecated, use non camelcase function name ~:)
 declare function jmmc-auth:signInMenu($node as node(), $model as map(*)){
+    jmmc-auth:sign-in-menu($node , $model)
+};
+
+declare function jmmc-auth:sign-in-menu($node as node(), $model as map(*)){
     let $isLogged := jmmc-auth:isLogged()
     let $indexpage := not($isLogged) and contains(request:get-url(),"login.html")
     let $icon := if($indexpage) then "icon-refresh" else if($isLogged) then "icon-ok" else "icon-off"    
