@@ -9,8 +9,15 @@
     <type>library</type>
     <target>jmmc-resources</target>
     <prepare/>
-    <finish/>
+    <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.10">
+            <ul xmlns=""> 
+                <li>New module jmmc-eso : provide helpers/rest urls to retrieve data from the eso webarea</li>
+                <li>Update oitools.jar to extract keywords of primary HDU</li>
+                <li>Depracated module jmmc-oival: replaced by jmmc-oiexplorer</li>
+            </ul>
+        </change>
         <change version="0.9">
             <ul xmlns=""> 
                 <li>jmmc-auth : add check-credential() functions and rename all function using the default naming convention</li>
