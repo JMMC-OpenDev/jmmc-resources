@@ -3,6 +3,7 @@ xquery version "3.0";
 
 (:~
  : Utility functions to interact with oival remote service;
+ : @depracated use jmmc-oiexplorer module
  :)
 module namespace jmmc-oival="http://exist.jmmc.fr/jmmc-resources/oival";
 
