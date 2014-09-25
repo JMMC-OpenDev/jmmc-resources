@@ -48,4 +48,8 @@
         <namespace>http://exist.jmmc.fr/jmmc-resources/simbad</namespace>
         <file>jmmc-simbad.xql</file>
     </xquery>
+    <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/cache</namespace>
+        <file>jmmc-cache.xql</file>
+    </xquery>
 </package>
