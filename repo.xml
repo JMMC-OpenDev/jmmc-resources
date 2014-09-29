@@ -11,6 +11,12 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.11">
+            <ul xmlns=""> 
+                <li>New module jmmc-csv : provide functions to split a CSV string into fields or xml table</li>
+                <li>New module jmmc-cache : provide helpers to manage a cache into a database document</li>
+            </ul>
+        </change>
         <change version="0.10">
             <ul xmlns=""> 
                 <li>New module jmmc-eso : provide helpers/rest urls to retrieve data from the eso webarea</li>
