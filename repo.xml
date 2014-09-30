@@ -15,13 +15,14 @@
             <ul xmlns=""> 
                 <li>New module jmmc-csv : provide functions to split a CSV string into fields or xml table</li>
                 <li>New module jmmc-cache : provide helpers to manage a cache into a database document</li>
+                <li>jmmc-ads : add get-bibcode and get-link functions</li>
             </ul>
         </change>
         <change version="0.10">
             <ul xmlns=""> 
                 <li>New module jmmc-eso : provide helpers/rest urls to retrieve data from the eso webarea</li>
                 <li>Update oitools.jar to extract keywords of primary HDU</li>
-                <li>Depracated module jmmc-oival: replaced by jmmc-oiexplorer</li>
+                <li>Deprecated module jmmc-oival: replaced by jmmc-oiexplorer</li>
             </ul>
         </change>
         <change version="0.9">

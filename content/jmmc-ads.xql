@@ -19,7 +19,8 @@ declare variable $jmmc-ads:ADS_HOST := "http://cdsads.u-strasbg.fr";
  base of urls to get ads abstract records in xml format.
  Some parameters may be appended to query by authors or bibcodes
  :) 
-declare variable $jmmc-ads:abs-accesspoint-url := xs:anyURI($jmmc-ads:ADS_HOST||"//cgi-bin/nph-abs_connect?data_type=XML");
+declare variable $jmmc-ads:abs-accesspoint-url := xs:anyURI($jmmc-ads:ADS_HOST||"//cgi-bin/nph-abs_connect?");
+declare variable $jmmc-ads:abs-bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/abs/");
 
 
 declare variable $jmmc-ads:MONTHS := <months><m><n>Jan</n><v>01</v></m><m><n>Feb</n><v>02</v></m><m><n>Mar</n><v>03</v></m><m><n>Apr</n><v>04</v></m><m><n>May</n><v>05</v></m><m><n>Jun</n><v>06</v></m><m><n>Jul</n><v>07</v></m><m><n>Aug</n><v>08</v></m><m><n>Sep</n><v>09</v></m><m><n>Oct</n><v>10</v></m><m><n>Nov</n><v>11</v></m><m><n>Dec</n><v>12</v></m><m><n>n/a</n><v>01</v></m></months>;
@@ -45,7 +46,8 @@ declare function jmmc-ads:get-records($bibcodes as xs:string*) as node()*
 {
     let $params := string-join(for $b in $bibcodes return "&amp;bibcode="||encode-for-uri($b),"")
     let $params := $params || "&amp;nr_to_return="||count($bibcodes)
-    return doc($jmmc-ads:abs-accesspoint-url||$params)//ads:record
+    let $params := $params || "&amp;data_type=XML"
+    return doc($jmmc-ads:abs-bibcode-url||$params)//ads:record
 };
 
 (:~ 
@@ -114,3 +116,29 @@ declare function jmmc-ads:get-title($record as element()) as xs:string
 {
     $record/ads:title    
 };
+
+(:~
+ : Get the bibcode from a given ADS record.
+ : 
+ : @param $record input ADS record
+ : @return the associated bibcode
+ :)
+declare function jmmc-ads:get-bibcode($record as element()) as xs:string
+{
+    $record/ads:bibcode    
+};
+
+(:~
+ : Get the astract link for a given bibcode.
+ : 
+ : @param $bibcode bibcode
+ : @param $label optionnal link text (use bibcode by default)
+ : @return the html link onto the ADS abstract service
+ :)
+declare function jmmc-ads:get-link($bibcode as xs:string, $label as xs:string?) as node()
+{
+    let $url := $jmmc-ads:abs-bibcode-url||encode-for-uri($bibcode)
+    return <a href="{$url}">{if($label) then $label else $bibcode}</a>
+};
+
+
