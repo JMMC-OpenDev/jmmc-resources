@@ -23,7 +23,7 @@ declare function jmmc-csv:csv-to-xml($data as xs:string, $field-sep as xs:string
             for $row in jmmc-csv:csv-records($data)
             return <tr>
                 {
-                    for $field in jmmc-csv:csv-fields(tokenize($row, $sep))
+                    for $field in jmmc-csv:csv-fields(tokenize($row, $field-sep))
                     return <td>{$field}</td>
                 }
                 </tr>
