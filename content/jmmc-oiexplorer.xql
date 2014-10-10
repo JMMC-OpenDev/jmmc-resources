@@ -7,61 +7,30 @@ xquery version "3.0";
 module namespace jmmc-oiexplorer="http://exist.jmmc.fr/jmmc-resources/oiexplorer";
 
 import module namespace oi="http://exist.jmmc.fr/extension/oiexplorer" at "java:fr.jmmc.exist.OIExplorerModule";
-declare namespace java-io-file="java:java.io.File";
 
-declare function jmmc-oiexplorer:to-xml-base64($file as xs:base64Binary?){
-    let $login:=xmldb:login("", "admin", "gapi")
-    
-    (: TODO : push out this nasty code :)
-    let $tmp := java-io-file:create-temp-file("jmmc-oiexplorer", "validate")
-    let $path := java-io-file:get-absolute-path($tmp)
-    let $op1 := file:serialize-binary($file, $path)    
-    
-    let $res := oi:to-xml($path)    
-    
-    let $op2 := java-io-file:delete($tmp)
-    
-    return $res
-};
-
-declare function jmmc-oiexplorer:to-xml($filename as xs:string?){
-    oi:to-xml($filename)
+(:~
+ : Parse OIFits data with JMMC's OIFits Explorer and return XML description.'
+ : 
+ : @param $data a URL or binary content to parse
+ : @return XML description of OIFits content
+ : @error failed to parse data as OIFits
+ :)
+declare function jmmc-oiexplorer:to-xml($data as item()) {
+    oi:to-xml($data)
 };
 
 (:~
- : Check that binary data is an acceptable OIFits file contents using OIExplorer's parser.
+ : Validate data as OIFits data using JMMC's OIFits Explorer.
  : 
- : @param $data the binary data to check
- : @return nothing
- : @error failed to parse the data as OIFits
- :)
-declare function jmmc-oiexplorer:check-base64($data as xs:base64Binary?) as empty() {
-    let $login:=xmldb:login("", "admin", "gapi")
-
-    (: TODO : push out this nasty code :)
-    let $tmp := java-io-file:create-temp-file("jmmc-oiexplorer", "check")
-    let $path := java-io-file:get-absolute-path($tmp)
-    let $op1 := file:serialize-binary($data, $path)
-
-    let $res := try {
-        oi:check($path)
-    } catch * {
-        (: throw the same error but clean up temporary file first :)
-        java-io-file:delete($tmp), error($err:code, $err:description, $err:value)
-    }
-    
-    let $op2 := java-io-file:delete($tmp)
-    
-    return $res
-};
-
-(:~
- : Check that a file is an acceptable OIFits file using OIExplorer's parser.
+ : If the data is invalid, an error is raised.
  : 
- : @param $filename URL to the file to check
+ : @param $data a URL or binary content to check
  : @return nothing
- : @error failed to parse the file as OIFits
+ : @error failed to parse data as OIFits
  :)
-declare function jmmc-oiexplorer:check($filename as xs:string?) as empty() {
-    oi:check($filename)
+declare function jmmc-oiexplorer:check($data as item()) as empty() {
+    let $x := util:log('warn', 'BEGIN')
+    let $ret := oi:check($data)
+    let $x := util:log('warn', 'END')
+    return $ret
 };
