@@ -27,3 +27,41 @@ declare function jmmc-oiexplorer:to-xml-base64($file as xs:base64Binary?){
 declare function jmmc-oiexplorer:to-xml($filename as xs:string?){
     oi:to-xml($filename)
 };
+
+(:~
+ : Check that binary data is an acceptable OIFits file contents using OIExplorer's parser.
+ : 
+ : @param $data the binary data to check
+ : @return nothing
+ : @error failed to parse the data as OIFits
+ :)
+declare function jmmc-oiexplorer:check-base64($data as xs:base64Binary?) as empty() {
+    let $login:=xmldb:login("", "admin", "gapi")
+
+    (: TODO : push out this nasty code :)
+    let $tmp := java-io-file:create-temp-file("jmmc-oiexplorer", "check")
+    let $path := java-io-file:get-absolute-path($tmp)
+    let $op1 := file:serialize-binary($data, $path)
+
+    let $res := try {
+        oi:check($path)
+    } catch * {
+        (: throw the same error but clean up temporary file first :)
+        java-io-file:delete($tmp), error($err:code, $err:description, $err:value)
+    }
+    
+    let $op2 := java-io-file:delete($tmp)
+    
+    return $res
+};
+
+(:~
+ : Check that a file is an acceptable OIFits file using OIExplorer's parser.
+ : 
+ : @param $filename URL to the file to check
+ : @return nothing
+ : @error failed to parse the file as OIFits
+ :)
+declare function jmmc-oiexplorer:check($filename as xs:string?) as empty() {
+    oi:check($filename)
+};
