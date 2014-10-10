@@ -29,8 +29,5 @@ declare function jmmc-oiexplorer:to-xml($data as item()) {
  : @error failed to parse data as OIFits
  :)
 declare function jmmc-oiexplorer:check($data as item()) as empty() {
-    let $x := util:log('warn', 'BEGIN')
-    let $ret := oi:check($data)
-    let $x := util:log('warn', 'END')
-    return $ret
+    oi:check($data)
 };
