@@ -13,7 +13,7 @@
 
     <target name="copyLibs">
         <delete dir="content" includes="*.jar" />
-        <copy todir="content">
+        <copy todir="content" verbose="true">
             <fileset dir="target/jmmc-libs" includes="*.jar" />
         </copy>
     </target>

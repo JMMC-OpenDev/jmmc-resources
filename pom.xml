@@ -5,9 +5,8 @@
 
     <parent>
         <groupId>fr.jmmc</groupId>
-        <artifactId>jmmc</artifactId>
+        <artifactId>exist</artifactId>
         <version>TRUNK</version>
-        <!--  please install first parent pom from jMCS/parent-pom directory -->
     </parent>
 
     <groupId>fr.jmmc.exist</groupId>
@@ -20,6 +19,29 @@
         <!-- do copy dependencies -->
         <mdep.skip>false</mdep.skip>
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <configuration>
+                            <propertyPrefix>mvn</propertyPrefix>
+                            <target>
+                                <ant antfile="${basedir}/build.xml" target="xar"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>
