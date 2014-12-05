@@ -4,10 +4,14 @@ xquery version "3.0";
 (:~
  : Utility functions to interact with ADS database (or its CDS mirror).
  : 
- : Prefer the use of utility function to retried content or use the following namespace to work directly on ads records:
+ : Prefer the use of utility function to retrieved content or use the following namespace to work directly on ads records:
  : declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts"; 
+ : Note: get-record and get-record functions always cache retrieved records
+ : TODO: add new functions in the API to perform fresh data retrieval. 
+ :
  :)
 module namespace jmmc-ads="http://exist.jmmc.fr/jmmc-resources/ads";
+import module namespace jmmc-cache="http://exist.jmmc.fr/jmmc-resources/cache";
 declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts"; 
 
 (: Store server url 
@@ -25,6 +29,21 @@ declare variable $jmmc-ads:abs-bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/ab
 
 declare variable $jmmc-ads:MONTHS := <months><m><n>Jan</n><v>01</v></m><m><n>Feb</n><v>02</v></m><m><n>Mar</n><v>03</v></m><m><n>Apr</n><v>04</v></m><m><n>May</n><v>05</v></m><m><n>Jun</n><v>06</v></m><m><n>Jul</n><v>07</v></m><m><n>Aug</n><v>08</v></m><m><n>Sep</n><v>09</v></m><m><n>Oct</n><v>10</v></m><m><n>Nov</n><v>11</v></m><m><n>Dec</n><v>12</v></m><m><n>n/a</n><v>01</v></m></months>;
 
+(:  prepare a cache :)
+declare variable $jmmc-ads:cache :=
+    try {
+        let $collection := "/db/apps/jmmc-resources/data/" (: TODO fix this path should be located to the application module data dir :)
+        let $filename := "ads-cache.xml"
+        let $doc := doc($collection||$filename)
+        return if ($doc) then $doc else ( doc(xmldb:store($collection, $filename, <ads-cache/>)), sm:chmod(xs:anyURI($collection||$filename),"rwxrwxrwx") )
+    } catch * {
+        error(xs:QName('error'), 'Failed to create cache : ' || $err:description, $err:value)
+    };
+declare variable $jmmc-ads:cache-insert   := jmmc-cache:insert($jmmc-ads:cache, ?, ?);
+declare variable $jmmc-ads:cache-get      := jmmc-cache:get($jmmc-ads:cache, ?);
+declare variable $jmmc-ads:cache-keys     := jmmc-cache:keys($jmmc-ads:cache);
+declare variable $jmmc-ads:cache-contains := jmmc-cache:contains($jmmc-ads:cache, ?);
+declare variable $jmmc-ads:cache-destroy  := function() { jmmc-cache:destroy($jmmc-ads:cache) };
 
 
 (:~ 
@@ -44,10 +63,20 @@ declare function jmmc-ads:get-record($bibcode as xs:string) as node()?
  :)
 declare function jmmc-ads:get-records($bibcodes as xs:string*) as node()*
 {
-    let $params := string-join(for $b in $bibcodes return "&amp;bibcode="||encode-for-uri($b),"")
-    let $params := $params || "&amp;nr_to_return="||count($bibcodes)
-    let $params := $params || "&amp;data_type=XML"
-    return doc($jmmc-ads:abs-bibcode-url||$params)//ads:record
+    let $existing := $bibcodes[.=$jmmc-ads:cache-keys]    
+    let $cached-records := $jmmc-ads:cache-get($existing)    
+    
+    let $to-retrieve := $bibcodes[not(.=$existing)]
+    let $params := string-join(for $b in $to-retrieve return "&amp;bibcode="||encode-for-uri($b),"")
+    let $params := $params || "&amp;nr_to_return="||count($to-retrieve) || "&amp;data_type=XML"    
+    let $retrieved := doc($jmmc-ads:abs-bibcode-url||$params)//ads:record
+        
+    let $cache-insert := for $r in $retrieved return $jmmc-ads:cache-insert($r/ads:bibcode/text(), $r)
+    
+    return (
+        $retrieved
+        ,$cached-records
+        )
 };
 
 (:~ 
@@ -118,6 +147,17 @@ declare function jmmc-ads:get-title($record as element()) as xs:string
 };
 
 (:~
+ : Get the journal information from a given ADS record.
+ : 
+ : @param $record input ADS record
+ : @return the journal information (long name, volume, page)
+ :)
+declare function jmmc-ads:get-journal($record as element()) as xs:string
+{
+    $record/ads:journal
+};
+
+(:~
  : Get the bibcode from a given ADS record.
  : 
  : @param $record input ADS record
@@ -142,3 +182,30 @@ declare function jmmc-ads:get-link($bibcode as xs:string, $label as xs:string?) 
 };
 
 
+(:~
+ : Display given records in a basic html fragment.
+ : This can be used as a rough implementation sample that each application is 
+ : adviced to implement for its own presentation.
+ : @param $records input ADS records
+ : @param $max-autors optional max number of author to display
+ : @return html description
+ :)
+declare function jmmc-ads:get-html($records as element()*, $max-authors as xs:integer?) as element()*
+{
+    for $record in $records
+    return 
+        let $bibcode := jmmc-ads:get-bibcode($record)
+        let $title := jmmc-ads:get-link($bibcode, jmmc-ads:get-title($record))
+        let $year := year-from-date(jmmc-ads:get-pub-date($record))
+        let $authors := jmmc-ads:get-authors($record)
+        let $suffix  := if (count($authors) gt $max-authors) then " et al."  else ()
+        let $authors-str := string-join(subsequence($authors,1,$max-authors),", ") || $suffix        
+        let $journal := jmmc-ads:get-journal($record)
+        return 
+            <span>
+                <b>{$title}</b>
+                <br/>
+                {$authors-str}<br/><b>{$year}</b> - <i>{$journal}</i>
+            </span>
+            
+};
