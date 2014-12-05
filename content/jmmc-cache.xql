@@ -19,14 +19,17 @@ module namespace jmmc-cache="http://exist.jmmc.fr/jmmc-resources/cache";
 
 (:~
  : Add a record to the given cache for the specified key.
- : 
+ : TODO handle limits case:
+ :  - key already present
+ :  - given record is empty
  : @param $cache the cache document
  : @param $key   the key to identify the entry
  : @param $data  the record to add to the cache
- : @return empty
+ : @return the given data added to the cache
  :)
-declare function jmmc-cache:insert($cache as node(), $key as xs:string, $data as item()*) {
-    update insert <cached key="{ $key }">{ $data }</cached> into $cache/*
+declare function jmmc-cache:insert($cache as node(), $key as xs:string, $data as item()*) as item()*{
+    let $update := update insert <cached key="{ $key }" date="{current-dateTime()}">{ $data }</cached> into $cache/*
+    return $data
 };
 
 (:~
@@ -49,6 +52,27 @@ declare function jmmc-cache:contains($cache as node(), $key as xs:string) as xs:
  :)
 declare function jmmc-cache:get($cache as node(), $key as xs:string) as item()* {
     head($cache//cached[@key=$key])/*
+};
+
+(:~
+ : Return the records associated to a list of keys in the given cache.
+ : 
+ : @param $cache the cache document
+ : @param $keys   the keys to search for in cache entries
+ : @return the records previously cached or empty if nothing in cache
+ :)
+declare function jmmc-cache:get($cache as node(), $keys as xs:string*) as item()* {
+    $cache//cached[@key=$keys]/*
+};
+
+(:~
+ : Return the keys associated to a record in the given cache.
+ : Warning: duplicated keys may appear waiting insert function fix (see TODO)
+ : @param $cache the cache document
+ : @return the keys of cached records or empty if nothing in cache
+ :)
+declare function jmmc-cache:keys($cache as node()) as xs:string* {
+    data($cache//cached/@key)
 };
 
 (:~
