@@ -35,7 +35,7 @@ declare variable $jmmc-ads:cache :=
         let $collection := "/db/apps/jmmc-resources/data/" (: TODO fix this path should be located to the application module data dir :)
         let $filename := "ads-cache.xml"
         let $doc := doc($collection||$filename)
-        return if ($doc) then $doc else ( doc(xmldb:store($collection, $filename, <ads-cache/>)), sm:chmod(xs:anyURI($collection||$filename),"rwxrwxrwx") )
+        return if ($doc) then $doc/* else ( doc(xmldb:store($collection, $filename, <ads-cache/>)), sm:chmod(xs:anyURI($collection||$filename),"rwxrwxrwx") )/*
     } catch * {
         error(xs:QName('error'), 'Failed to create cache : ' || $err:description, $err:value)
     };
@@ -43,7 +43,6 @@ declare variable $jmmc-ads:cache-insert   := jmmc-cache:insert($jmmc-ads:cache, 
 declare variable $jmmc-ads:cache-get      := jmmc-cache:get($jmmc-ads:cache, ?);
 declare variable $jmmc-ads:cache-keys     := jmmc-cache:keys($jmmc-ads:cache);
 declare variable $jmmc-ads:cache-contains := jmmc-cache:contains($jmmc-ads:cache, ?);
-declare variable $jmmc-ads:cache-destroy  := function() { jmmc-cache:destroy($jmmc-ads:cache) };
 
 
 (:~ 
