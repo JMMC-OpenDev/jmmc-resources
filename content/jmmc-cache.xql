@@ -5,7 +5,7 @@ xquery version "3.0";
  : document in the database.
  : 
  : Any content can be associated with a key and later queried and retrieved
- : with the same key.
+ : with the same key. Duplicated keys are allowed.
  : 
  : The entries are serialized to a document in the database. The caller of the
  : functions below have to have the appropriate rights on this document.
@@ -19,9 +19,7 @@ module namespace jmmc-cache="http://exist.jmmc.fr/jmmc-resources/cache";
 
 (:~
  : Add a record to the given cache for the specified key.
- : TODO handle limits case:
- :  - key already present
- :  - given record is empty
+ :
  : @param $cache the cache document
  : @param $key   the key to identify the entry
  : @param $data  the record to add to the cache
@@ -44,14 +42,18 @@ declare function jmmc-cache:contains($cache as node(), $key as xs:string) as xs:
 };
 
 (:~
- : Return the record associated to a key in the given cache.
+ : Return the records associated to a key in the given cache.
+ : 
+ : @note
+ : Use jmmc-cache:contains() to distinguish an entry with en empty contents
+ : from the case where there is no entry with this key.
  : 
  : @param $cache the cache document
  : @param $key   the key to search for in cache entries
- : @return the record previously cached or empty if nothing in cache
+ : @return a sequence of records or empty if nothing in cache
  :)
 declare function jmmc-cache:get($cache as node(), $key as xs:string) as item()* {
-    head($cache//cached[@key=$key])/*
+    $cache//cached[@key=$key]/*
 };
 
 (:~
