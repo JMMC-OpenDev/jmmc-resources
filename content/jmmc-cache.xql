@@ -79,6 +79,19 @@ declare function jmmc-cache:keys($cache as node()) as xs:string* {
  : @return empty
  :)
 declare function jmmc-cache:flush($cache as node()) {
+    jmmc-cache:flush($cache, ())
+};
+
+(:~
+ : Clear cached entries older than the specified duration.
+ : 
+ : @param $cache the cache node
+ : @param $ttl   the maximum age of the entries to keep
+ : @return empty
+ :)
+declare function jmmc-cache:flush($cache as node(), $ttl as xs:dayTimeDuration?) {
+    let $now := current-dateTime()
     for $cached in $cache/cached
+    where $now - xs:dateTime($cached/@date) > $ttl
     return update delete $cached
 };
