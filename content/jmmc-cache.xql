@@ -45,6 +45,9 @@ declare function jmmc-cache:contains($cache as node(), $key as xs:string) as xs:
 (:~
  : Return the records associated to a key in the given cache.
  : 
+ : The returned sequence of values is ordered by the date and time the matching
+ : entries have been inserted (latest entry first).
+ : 
  : @note
  : Use jmmc-cache:contains() to distinguish an entry with en empty contents
  : from the case where there is no entry with this key.
@@ -54,7 +57,9 @@ declare function jmmc-cache:contains($cache as node(), $key as xs:string) as xs:
  : @return a sequence of records or empty if nothing in cache
  :)
 declare function jmmc-cache:get($cache as node(), $key as xs:string) as item()* {
-    $cache/cached[@key=$key]/*
+    for $cached in $cache/cached[@key=$key]
+    order by xs:dateTime($cached/@date) descending
+    return $cached/*
 };
 
 (:~
