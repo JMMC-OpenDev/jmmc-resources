@@ -64,8 +64,7 @@ declare function jmmc-ads:get-record($bibcode as xs:string) as node()?
 declare function jmmc-ads:get-records($bibcodes as xs:string*) as node()*
 {
     let $existing := $bibcodes[.=$jmmc-ads:cache-keys]    
-    let $cached-records := $jmmc-ads:cache-get($existing)    
-    
+
     let $to-retrieve := $bibcodes[not(.=$existing)]
     let $params := string-join(for $b in $to-retrieve return "&amp;bibcode="||encode-for-uri($b),"")
     let $params := $params || "&amp;nr_to_return="||count($to-retrieve) || "&amp;data_type=XML"    
@@ -75,7 +74,7 @@ declare function jmmc-ads:get-records($bibcodes as xs:string*) as node()*
     
     return (
         $retrieved
-        ,$cached-records
+        , for $key in $existing return $jmmc-ads:cache-get($key)
         )
 };
 

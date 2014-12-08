@@ -57,17 +57,6 @@ declare function jmmc-cache:get($cache as node(), $key as xs:string) as item()* 
 };
 
 (:~
- : Return the records associated to a list of keys in the given cache.
- : 
- : @param $cache the cache document
- : @param $keys   the keys to search for in cache entries
- : @return the records previously cached or empty if nothing in cache
- :)
-declare function jmmc-cache:get($cache as node(), $keys as xs:string*) as item()* {
-    $cache//cached[@key=$keys]/*
-};
-
-(:~
  : Return the keys associated to a record in the given cache.
  : Warning: duplicated keys may appear waiting insert function fix (see TODO)
  : @param $cache the cache document
