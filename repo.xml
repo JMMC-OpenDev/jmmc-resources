@@ -11,12 +11,19 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.12">
+            <ul xmlns=""> 
+                <li>New module jmmc-xml : provide utility function related to xml</li>
+                <li>jmmc-ads : cache ads records in db, add get-html()</li>
+                <li>jmmc-cache : add get-keys(), get() with multiples keys and change add() to return the inserted data</li>
+            </ul>
+        </change>
         <change version="0.11">
             <ul xmlns=""> 
                 <li>New module jmmc-csv : provide functions to split a CSV string into fields or xml table</li>
                 <li>New module jmmc-cache : provide helpers to manage a cache into a database document</li>
-                <li>jmmc-ads : add get-bibcode and get-link functions</li>
-                <li>jmmc-oiexplorer : add function to check OIFits data, change jmmc-oiexplorer:to-xml() take URL or binary data</li>
+                <li>jmmc-ads : add get-bibcode() and get-link() functions</li>
+                <li>jmmc-oiexplorer : add function to check OIFits data, change to-xml() to take URL or binary data</li>
                 <li>Update oiexplorer-existdb.jar for accepting either an URL or binary data as input</li>
                 <li>Update to latest oitools.jar</li>
             </ul>

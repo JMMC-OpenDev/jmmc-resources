@@ -12,5 +12,6 @@ declare variable $dir external;
 declare variable $target external;
 
 (: fix permission of cache so everybody can get their requests cached :)
-sm:chmod( xs:anyURI(concat($target,"/data/eso-cache.xml")), "rw-rw-rw-")
-
+let $op := sm:chmod( xs:anyURI(concat($target,"/data/eso-cache.xml")), "rw-rw-rw-")
+let $op := sm:chmod( xs:anyURI(concat($target,"/data/ads-cache.xml")), "rw-rw-rw-")
+return true()

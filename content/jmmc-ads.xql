@@ -30,15 +30,8 @@ declare variable $jmmc-ads:abs-bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/ab
 declare variable $jmmc-ads:MONTHS := <months><m><n>Jan</n><v>01</v></m><m><n>Feb</n><v>02</v></m><m><n>Mar</n><v>03</v></m><m><n>Apr</n><v>04</v></m><m><n>May</n><v>05</v></m><m><n>Jun</n><v>06</v></m><m><n>Jul</n><v>07</v></m><m><n>Aug</n><v>08</v></m><m><n>Sep</n><v>09</v></m><m><n>Oct</n><v>10</v></m><m><n>Nov</n><v>11</v></m><m><n>Dec</n><v>12</v></m><m><n>n/a</n><v>01</v></m></months>;
 
 (:  prepare a cache :)
-declare variable $jmmc-ads:cache :=
-    try {
-        let $collection := "/db/apps/jmmc-resources/data/" (: TODO fix this path should be located to the application module data dir :)
-        let $filename := "ads-cache.xml"
-        let $doc := doc($collection||$filename)
-        return if ($doc) then $doc/* else ( doc(xmldb:store($collection, $filename, <ads-cache/>)), sm:chmod(xs:anyURI($collection||$filename),"rwxrwxrwx") )/*
-    } catch * {
-        error(xs:QName('error'), 'Failed to create cache : ' || $err:description, $err:value)
-    };
+declare variable $jmmc-ads:cache-filename := "/db/apps/jmmc-resources/data/ads-cache.xml";
+declare variable $jmmc-ads:cache          := doc($jmmc-ads:cache-filename)/ads-cache;
 declare variable $jmmc-ads:cache-insert   := jmmc-cache:insert($jmmc-ads:cache, ?, ?);
 declare variable $jmmc-ads:cache-get      := jmmc-cache:get($jmmc-ads:cache, ?);
 declare variable $jmmc-ads:cache-keys     := jmmc-cache:keys($jmmc-ads:cache);
