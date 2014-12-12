@@ -6,15 +6,22 @@ xquery version "3.0";
  :)
 module namespace jmmc-eso="http://exist.jmmc.fr/jmmc-resources/eso";
 
+import module namespace jmmc-cache="http://exist.jmmc.fr/jmmc-resources/cache";
+
+
 declare namespace rest="http://exquery.org/ns/restxq";
 declare namespace output="http://www.w3.org/2010/xslt-xquery-serialization";
 
 (:  ESO Observation Schedule :)
 declare variable $jmmc-eso:eos-url := "http://archive.eso.org/wdb/wdb/eso/sched_rep_arc/query";
 
-(: if present cache will store record to avoid multi call on remote portal :)
-declare variable $jmmc-eso:cache-docname := "/db/apps/jmmc-resources/data/eso-cache.xml";
-declare variable $jmmc-eso:cache := doc($jmmc-eso:cache-docname)/*;
+(:  prepare a cache :)
+declare variable $jmmc-eso:cache-filename := "/db/apps/jmmc-resources/data/eso-cache.xml";
+declare variable $jmmc-eso:cache          := doc($jmmc-eso:cache-filename)/eso-cache;
+declare variable $jmmc-eso:cache-insert   := jmmc-cache:insert($jmmc-eso:cache, ?, ?);
+declare variable $jmmc-eso:cache-get      := jmmc-cache:get($jmmc-eso:cache, ?);
+declare variable $jmmc-eso:cache-keys     := jmmc-cache:keys($jmmc-eso:cache);
+declare variable $jmmc-eso:cache-contains := jmmc-cache:contains($jmmc-eso:cache, ?);
 
  (:~
  : Retrieve associated data for the given progid.
@@ -28,8 +35,7 @@ declare
 function jmmc-eso:get-meta-from-progid($progid as xs:string*) as node()?
 {
   if (string-length($progid)>0) then
-      let $cached-data := $jmmc-eso:cache//record[progid=$progid]
-      return if ($cached-data) then $cached-data else
+      if ($jmmc-eso:cache-contains($progid)) then $jmmc:eso-cache-get($progid) else
       let $url := xs:anyURI($jmmc-eso:eos-url||"?wdbo=html/display&amp;progid="||encode-for-uri($progid))
       let $ua := "Mozilla/5.0 (X11; Linux x86_64; rv:24.0) Gecko/20140903 Firefox/24.0 Iceweasel/24.8.0"
       let $table := httpclient:get( $url, true(), <headers><header name="User-Agent" value="{$ua}"/></headers>)//table[@id="wdbresults1"]
@@ -42,9 +48,7 @@ function jmmc-eso:get-meta-from-progid($progid as xs:string*) as node()?
                                 {element {"pi"} { tokenize($meta[ name()="pi_coi"], "/")[1]}}
                             </record>
                     else ()
-        (: store in cache, if both cache root and record exists:)
-        let $store-in-cache := if($jmmc-eso:cache and $record) then update insert $record into $jmmc-eso:cache else ()
-        return $record
+        return $jmmc-eso:cache-insert($progid, $record)
       }catch * {
         $table   
       }
