@@ -15,7 +15,7 @@ declare namespace xhtml="http://www.w3.org/1999/xhtml";
  :)
 declare function jmmc-web:navbar-li($node as node(), $model as map(*)) as node() {
   <li class="dropdown">
-    <a href="#" class="dropdown-toggle" style="padding:12px;" data-toggle="dropdown"><img height="30" src="http://www.jmmc.fr/images/jmmc_large.jpg" alt="JMMC logo"/>&#160;<span class="caret"></span></a>
+    <a href="#" class="dropdown-toggle" style="padding:12px;" data-toggle="dropdown"><img height="30" src="//www.jmmc.fr/images/jmmc_large.jpg" alt="JMMC logo"/>&#160;<span class="caret"></span></a>
     <ul class="dropdown-menu">
 
     <li><a href="http://www.jmmc.fr/about_jmmc.htm">Who are we ?</a>    
