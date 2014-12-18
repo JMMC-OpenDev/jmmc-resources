@@ -17,7 +17,10 @@ declare variable $jmmc-simbad:TAP-SYNC := "http://simbad.u-strasbg.fr/simbad/sim
 
 (:~
  : Execute an ADQL query against a TAP service.
- : 
+ :
+ : Warning: CDS set a query limit for the TAP service of max 6 requests per second. 
+ : 403 error code is returned when limit is encountered.
+ :
  : @param $uri   the URI of a TAP sync resource
  : @param $query the ADQL query to execute
  : @return a VOTable with results for the query
@@ -29,10 +32,11 @@ declare %private function jmmc-simbad:tap-adql-query($uri as xs:string, $query a
         'LANG=ADQL',
         'FORMAT=votable',
         'QUERY=' || encode-for-uri($query)), '&amp;')
-    let $response := http:send-request(<http:request method="GET" href="{$uri}"/>)
+    let $response        := http:send-request(<http:request method="GET" href="{$uri}"/>)
+    let $response-status := $response[1]/@status 
     
-    return if ($response[1]/@status != 200) then
-        error(xs:QName('jmmc-simbad:TAP'), 'Failed to retrieve data for target', $query)
+    return if ($response-status != 200) then
+        error(xs:QName('jmmc-simbad:TAP'), 'Failed to retrieve data for target (HTTP_STATUS='|| $response-status ||', query='||$query||')', $query) 
     else if (count($response[1]/http:body) != 1) then
         error(xs:QName('jmmc-simbad:TAP'), 'Bad content returned')
     else
