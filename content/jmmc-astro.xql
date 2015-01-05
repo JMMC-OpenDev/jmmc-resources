@@ -82,25 +82,24 @@ function jmmc-astro:from-hms($s as xs:string) as xs:double {
         $ra
 };
 
-(:~
- : Return the lower and upper wavelengths of the given band in microns.
- : 
- : @param $band-name the name of the band
- : @return a sequence of two numbers for lower and upper wavelengths
- : @error unknown band
+(:~ stores bounds of visible, near-ir and mid-ir wavelength divisions.
  :)
-declare
-    %test:arg("band-name", "U")
-    %test:assertEquals(0.30100000000000005, 0.367)
-function jmmc-astro:wavelength-range($band-name as xs:string) as item()* {
-    let $band := band:values()[band:getName(.) = $band-name]
-    return 
-        if (empty($band)) then
-            error(xs:QName('jmmc-astro'), 'Unknown band: ' || $band-name)
-        else
-            let $lambda    := band:get-lambda($band)
-            let $half-bandwidth := band:get-band-width($band) div 2
-            return ( $lambda - $half-bandwidth, $lambda + $half-bandwidth)
+declare %private variable $jmmc-astro:wavelength-divisions := map {
+                                "Visible":( 0.3, 1 ),
+                                "Near infrared":( 1,   5 ),
+                                "Mid infrared" :( 5,   18.6 )
+};
+
+(:~
+ : Return a list of optical wavelength division names.
+ : 
+ : @return a sequence of strings with division ids
+ :)
+declare function jmmc-astro:wavelength-division-names() as item()* {
+ for $d in map:keys($jmmc-astro:wavelength-divisions)
+   let $r:=$jmmc-astro:wavelength-divisions($d)
+     order by $r[1]
+     return $d 
 };
 
 (:~
@@ -111,3 +110,31 @@ function jmmc-astro:wavelength-range($band-name as xs:string) as item()* {
 declare function jmmc-astro:band-names() as item()* {
     for $b in band:values() return band:get-name($b)
 };
+
+(:~
+ : Return the lower and upper wavelengths of the given band or division.
+ : 
+ : @param $band-name the name of the band or division
+ : @return a sequence of two numbers for lower and upper wavelengths in microns
+ : @error unknown band
+ :)
+declare
+    %test:arg("band-name", "U")
+    %test:assertEquals(0.30100000000000005, 0.367)
+function jmmc-astro:wavelength-range($band-name as xs:string) as item()* {
+    let $band := band:values()[band:getName(.) = $band-name]
+    return 
+        if (empty($band)) then
+            let $div-range := $jmmc-astro:wavelength-divisions($band-name)
+            return
+                if( empty($div-range) ) then
+                    error(xs:QName('jmmc-astro'), 'Unknown band: ' || $band-name)
+                else
+                    $div-range
+        else
+            let $lambda    := band:get-lambda($band)
+            let $half-bandwidth := band:get-band-width($band) div 2
+            return ( $lambda - $half-bandwidth, $lambda + $half-bandwidth)
+};
+
+
