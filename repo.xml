@@ -11,6 +11,10 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.13">
+                <li>jmmc-eso : use first record for a given progid which gets multiple entries on eso side</li>
+                <li>jmmc-astro : add function handling of optical wavelength divisions (visible, near-ir, mid-ir)</li>
+        </change>
         <change version="0.12">
             <ul xmlns=""> 
                 <li>New module jmmc-xml : provide utility function related to xml</li>
