@@ -7,6 +7,8 @@
 
     <target name="xar" depends="copyLibs">
         <mkdir dir="${build.dir}"/>
+        <delete dir="${build.dir}" includes="*.xar"/>
+
         <zip basedir="." destfile="${build.dir}/${project.app}-${project.version}.xar"
              excludes="${build.dir}/**,.exist/**,target/**,build.xml,pom.xml"/>
     </target>
