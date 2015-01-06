@@ -12,6 +12,7 @@
     <finish>post-install.xql</finish>
     <changelog>
         <change version="0.13">
+                <li>jmmc-about : add jmmc-about:deployed() to provide a deployement date getter </li>
                 <li>jmmc-eso : use first record for a given progid which gets multiple entries on eso side</li>
                 <li>jmmc-astro : add function handling of optical wavelength divisions (visible, near-ir, mid-ir)</li>
         </change>
