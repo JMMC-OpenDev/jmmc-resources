@@ -58,9 +58,9 @@ declare
     %templates:wrap
 function jmmc-about:changelog($node as node(), $model as map(*)) as map(*) {
     let $app-root := $model($templates:CONFIGURATION)($templates:CONFIG_APP_ROOT)
-    return map { "changes" := jmmc-about:changelog($app-root) }
+    let $deployed := (doc($app-root || '/repo.xml')//*:deployed/text())[1]
+    return map { "changes" := jmmc-about:changelog($app-root), "deployed" :=  $deployed}
 };
-
 
 (:~
  : Return the current version number of the application.
@@ -79,6 +79,23 @@ function jmmc-about:version($node as node(), $model as map(*)) as xs:string? {
     (: force version number format to all numbers and single dot and XX.9 after XX.10 :)
     let $version := $changes[@version=max($changes/@version)]/@version
     return if($version) then $version else "not provided"
+};
+
+
+(:~
+ : Return the deployement date of the application.
+ : 
+ : It makes use of the current $model map to get the list of changes.
+ : 
+ : @param $node
+ : @param $model
+ : @return the current deployement date of the application as string.
+ :)
+declare 
+    %templates:wrap
+function jmmc-about:deployed($node as node(), $model as map(*)) as xs:string? {
+    let $d := $model("deployed")
+    return if($d) then $d else "not provided"
 };
 
 (:~
