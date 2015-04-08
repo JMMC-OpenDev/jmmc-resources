@@ -11,6 +11,12 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.14">
+            <ul xmlns=""> 
+                <li>New module jmmc-xml : provide utility function related to xml</li>
+                <li>jmmc-about : add jmmc-about:status() template function to retrieve the application status (stored in repo.xml) </li>
+            </ul>
+        </change>
         <change version="0.13">
                 <li>jmmc-about : add jmmc-about:deployed() to provide a deployement date getter </li>
                 <li>jmmc-eso : use first record for a given progid which gets multiple entries on eso side</li>

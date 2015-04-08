@@ -1,27 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.13" spec="1.0">
+<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.14" spec="1.0">
     <title>JMMC Commons module</title>
     <dependency package="http://exist-db.org/apps/shared"/>
     <dependency package="http://expath.org/lib/ft-client"/>
     <xquery>
-        <namespace>http://exist.jmmc.fr/jmmc-resources/eso</namespace>
-        <file>jmmc-eso.xql</file>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/about</namespace>
+        <file>jmmc-about.xql</file>
     </xquery>
     <xquery>
-        <namespace>http://exist.jmmc.fr/jmmc-resources/auth</namespace>
-        <file>jmmc-auth.xql</file>
-    </xquery>
-    <xquery>
-        <namespace>http://exist.jmmc.fr/jmmc-resources/web</namespace>
-        <file>jmmc-web.xql</file>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/ads</namespace>
+        <file>jmmc-ads.xql</file>
     </xquery>
     <xquery>
         <namespace>http://exist.jmmc.fr/jmmc-resources/astro</namespace>
         <file>jmmc-astro.xql</file>
     </xquery>
     <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/auth</namespace>
+        <file>jmmc-auth.xql</file>
+    </xquery>
+     <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/cache</namespace>
+        <file>jmmc-cache.xql</file>
+    </xquery>
+    <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/csv</namespace>
+        <file>jmmc-csv.xql</file>
+    </xquery>
+    <xquery>
         <namespace>http://exist.jmmc.fr/jmmc-resources/dateutil</namespace>
         <file>jmmc-dateutil.xql</file>
+    </xquery>
+    <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/eso</namespace>
+        <file>jmmc-eso.xql</file>
     </xquery>
     <!-- in the future oiexplorer should replace oival -->
     <xquery>
@@ -33,27 +45,19 @@
         <file>jmmc-oival.xql</file>
     </xquery>
     <xquery>
-        <namespace>http://exist.jmmc.fr/jmmc-resources/ads</namespace>
-        <file>jmmc-ads.xql</file>
-    </xquery>
-    <xquery>
-        <namespace>http://exist.jmmc.fr/jmmc-resources/about</namespace>
-        <file>jmmc-about.xql</file>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/simbad</namespace>
+        <file>jmmc-simbad.xql</file>
     </xquery>
     <xquery>
         <namespace>http://exist.jmmc.fr/jmmc-resources/vizier</namespace>
         <file>jmmc-vizier.xql</file>
     </xquery>
     <xquery>
-        <namespace>http://exist.jmmc.fr/jmmc-resources/simbad</namespace>
-        <file>jmmc-simbad.xql</file>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/web</namespace>
+        <file>jmmc-web.xql</file>
     </xquery>
     <xquery>
-        <namespace>http://exist.jmmc.fr/jmmc-resources/cache</namespace>
-        <file>jmmc-cache.xql</file>
-    </xquery>
-    <xquery>
-        <namespace>http://exist.jmmc.fr/jmmc-resources/csv</namespace>
-        <file>jmmc-csv.xql</file>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/xml</namespace>
+        <file>jmmc-xml.xql</file>
     </xquery>
 </package>

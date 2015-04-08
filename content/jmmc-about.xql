@@ -45,21 +45,31 @@ declare function jmmc-about:changelog($app-root as xs:string) {
 };
 
 (:~
- : Put the list of changes of the application into the current model for
- : subsequent uses by other templating functions.
+ : Fill the current model for subsequent uses by other templating functions with:
+ : - changes elements
+ : - deployed date
+ : - status 
+ : - stable entry if repo.xml status element is stable
  : 
  : It makes use of the current $model map to get the application path from its "app-root" key.
  : 
  : @param $node
  : @param $model
- : @return a map with changes to be added to current $model map.
+ : @return a map with following keys : "changes", "status", "deployed" and "stable" depending on the repo.xml status element.
  :)
 declare
     %templates:wrap
 function jmmc-about:changelog($node as node(), $model as map(*)) as map(*) {
     let $app-root := $model($templates:CONFIGURATION)($templates:CONFIG_APP_ROOT)
-    let $deployed := (doc($app-root || '/repo.xml')//*:deployed/text())[1]
-    return map { "changes" := jmmc-about:changelog($app-root), "deployed" :=  $deployed}
+    let $repo := doc($app-root || '/repo.xml')
+    let $deployed := ($repo//*:deployed/text())[1]
+    let $status := $repo//*:status/text()
+    let $map := map { "changes" := jmmc-about:changelog($app-root), "deployed" :=  $deployed, "status" := $status}
+    return
+        if ($status="stable") then
+                map:new($map, map:entry("stable", true()))
+            else
+                $map
 };
 
 (:~
@@ -79,6 +89,21 @@ function jmmc-about:version($node as node(), $model as map(*)) as xs:string? {
     (: force version number format to all numbers and single dot and XX.9 after XX.10 :)
     let $version := $changes[@version=max($changes/@version)]/@version
     return if($version) then $version else "not provided"
+};
+(:~
+ : Return the current status of the application.
+ : 
+ : It makes use of the current $model map to get the list of changes.
+ : 
+ : @param $node
+ : @param $model
+ : @return the current status of the application as string : alpha, beta or stable.
+ :)
+declare 
+    %templates:wrap
+function jmmc-about:status($node as node(), $model as map(*)) as xs:string? {
+    let $changes := $model("status")
+    return if($changes) then $changes else "not provided"
 };
 
 
