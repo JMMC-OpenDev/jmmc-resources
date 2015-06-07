@@ -40,6 +40,7 @@ declare function jmmc-web:navbar-li($node as node(), $model as map(*)) as node()
     <li><a href="http://www.jmmc.fr/data_processing_vinci.htm">VINCI</a></li>
     <li><a href="http://www.jmmc.fr/data_processing_midi.htm">MIDI</a></li>
     <li><a href="http://www.jmmc.fr/data_processing_amber.htm">AMBER</a></li>
+    <li><a href="http://www.jmmc.fr/data_processing_pionier.htm">PIONIER</a></li>
     <li><a href="http://www.jmmc.fr/oifitsexplorer_page.htm">OIFits Explorer</a></li>
     <li><a href="http://www.jmmc.fr/oival_page.htm">Oifits Validator</a></li>
     </ul>
