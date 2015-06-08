@@ -36,6 +36,7 @@ declare variable $jmmc-ads:cache-insert   := jmmc-cache:insert($jmmc-ads:cache, 
 declare variable $jmmc-ads:cache-get      := jmmc-cache:get($jmmc-ads:cache, ?);
 declare variable $jmmc-ads:cache-keys     := jmmc-cache:keys($jmmc-ads:cache);
 declare variable $jmmc-ads:cache-contains := jmmc-cache:contains($jmmc-ads:cache, ?);
+declare variable $jmmc-ads:cache-flush    := jmmc-cache:flush($jmmc-ads:cache);
 
 
 (:~ 

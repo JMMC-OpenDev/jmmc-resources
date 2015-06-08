@@ -102,8 +102,8 @@ function jmmc-about:version($node as node(), $model as map(*)) as xs:string? {
 declare 
     %templates:wrap
 function jmmc-about:status($node as node(), $model as map(*)) as xs:string? {
-    let $changes := $model("status")
-    return if($changes) then $changes else "not provided"
+    let $status := $model("status")
+    return if($status) then $status else ()
 };
 
 
