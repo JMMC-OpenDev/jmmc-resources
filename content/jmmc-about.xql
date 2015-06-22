@@ -67,7 +67,7 @@ function jmmc-about:changelog($node as node(), $model as map(*)) as map(*) {
     let $map := map { "changes" := jmmc-about:changelog($app-root), "deployed" :=  $deployed, "status" := $status}
     return
         if ($status="stable") then
-                map:new($map, map:entry("stable", true()))
+                map:new(($map, map:entry("stable", true())))
             else
                 $map
 };

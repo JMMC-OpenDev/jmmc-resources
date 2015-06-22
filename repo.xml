@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.15">
+            <ul xmlns=""> 
+                <li>jmmc-about : fix map for stable applications </li>
+            </ul>
+        </change>
         <change version="0.14">
             <ul xmlns=""> 
                 <li>New module jmmc-xml : provide utility function related to xml</li>
