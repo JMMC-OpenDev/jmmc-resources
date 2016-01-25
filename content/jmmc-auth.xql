@@ -64,7 +64,7 @@ declare function jmmc-auth:get-info($email)
         let $postResponse := httpclient:post-form($jmmc-auth:serviceAccesspointUrl, $fields, false(), ())
         let $resp := $postResponse//response[1]
         return
-            <author>{ $resp/* }</author>
+            <author> <email>{ data($email) }</email> { $resp/* } </author>
     else
         ()
 };
