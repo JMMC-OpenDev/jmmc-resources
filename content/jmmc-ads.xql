@@ -61,7 +61,10 @@ declare function jmmc-ads:get-records($bibcodes as xs:string*) as node()*
     let $to-retrieve := $bibcodes[not(.=$existing)]
     let $params := string-join(for $b in $to-retrieve return "&amp;bibcode="||encode-for-uri($b),"")
     let $params := $params || "&amp;nr_to_return="||count($to-retrieve) || "&amp;data_type=XML"    
-    let $retrieved := doc($jmmc-ads:abs-bibcode-url||$params)//ads:record
+    let $retrieved := if(exists($to-retrieve)) then 
+        let $log  := util:log("INFO", "require to query ads for "||string-join($to-retrieve, ", "))
+        return doc($jmmc-ads:abs-bibcode-url||$params)//ads:record 
+        else ()
         
     let $cache-insert := for $r in $retrieved return $jmmc-ads:cache-insert($r/ads:bibcode/text(), $r)
     
