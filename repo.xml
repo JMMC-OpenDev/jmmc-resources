@@ -14,6 +14,7 @@
         <change version="0.17">
             <ul xmlns=""> 
                 <li>Fix dependancy url for the EXPath File Transfer Client Module Implementation </li>
+                <li>jmmc-date: add jmmc-dateutil:JDtoISO8601() and jmmc-dateutil:ISO8601toJD()</li>
             </ul>
         </change>
         <change version="0.16">

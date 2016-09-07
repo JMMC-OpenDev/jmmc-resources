@@ -104,6 +104,38 @@ as xs:double
     ($dateTime - xs:dateTime("1858-11-17T00:00:00")) div xs:dayTimeDuration('P1D')    
 };
 
+
+(:~
+ : Convert a Julian Day to iso8601
+ : 
+ : @param $jd Julian Day to convert
+ : @return the associated datetime
+ :)
+declare function jmmc-dateutil:JDtoISO8601($jd as xs:double)
+as xs:dateTime
+{
+    (: http://aa.usno.navy.mil/cgi-bin/aa_jdconv.pl?form=2&jd=0
+        $JD0  := xs:dateTime("-4713-01-01T12:00:00")    
+            but should be -4713-11-24T12:00:00      
+    :)
+    xs:dateTime("-4713-11-24T12:00:00") + $jd * xs:dayTimeDuration('P1D')
+};
+
+
+(:~
+ : Convert an iso8601 to Julian Day
+ : 
+ : @param $dateTime datetime to convert
+ : @return the associated jd
+ :)
+declare function jmmc-dateutil:ISO8601toJD($dateTime as xs:dateTime)
+as xs:double
+{
+    ($dateTime - xs:dateTime("-4713-11-24T12:00:00")) div xs:dayTimeDuration('P1D')    
+};
+
+
+
 (:~
  : Compute abreviation of elasped time.
  : TODO complete cases
