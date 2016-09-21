@@ -6,6 +6,9 @@ xquery version "3.0";
  : import module namespace jmmc-dateutil="http://exist.jmmc.fr/jmmc-resources/dateutil" at "/db/apps/jmmc-resources/content/jmmc-dateutil.xql";
  : or import last version of updated library 
  : 
+ : TODO: re-implement following conversion formulae  ( see https://fr.wikipedia.org/wiki/Jour_julien#cite_note-Source_Meeus-5 )
+ : GM trusts xquery date handling LB not ;)
+ : 
  :)
 module namespace jmmc-dateutil="http://exist.jmmc.fr/jmmc-resources/dateutil";
 
@@ -131,7 +134,53 @@ as xs:dateTime
 declare function jmmc-dateutil:ISO8601toJD($dateTime as xs:dateTime)
 as xs:double
 {
-    ($dateTime - xs:dateTime("-4713-11-24T12:00:00")) div xs:dayTimeDuration('P1D')    
+    ($dateTime - xs:dateTime("-4714-11-24T12:00:00")) div xs:dayTimeDuration('P1D')    
+};
+
+(:~
+ : Convert an UT date to iso8601
+ : 
+ : @param $ut UT date to convert [s]
+ : @param $epoch reference epoch of J2000 if empty
+ : @return the associated datetime
+ :)
+declare function jmmc-dateutil:UTtoISO8601($ut as xs:double, $epoch as xs:double?)
+as xs:dateTime
+{
+    let $epoch := if(exists($epoch)) then $epoch else xs:dateTime("2000-01-01T00:00:00")
+    return
+      $ut * xs:dayTimeDuration('PT1S') + $epoch
+};
+
+
+(:~
+ : Convert an iso8601 to UT date
+ : 
+ : @param $dateTime datetime to convert
+ : @param $epoch reference epoch of J2000 if empty
+ : @return the associated ut [s]
+ :)
+declare function jmmc-dateutil:ISO8601toUT($dateTime as xs:dateTime, $epoch as xs:double?)
+as xs:double
+{
+    let $epoch := if(exists($epoch)) then $epoch else xs:dateTime("2000-01-01T00:00:00")
+    return
+      ( $dateTime - $epoch ) div xs:dayTimeDuration('PT1S')
+};
+
+(:~
+ : Convert an UT date to MJD
+ : 
+ : @param $dateTime datetime to convert
+ : @param $epoch reference epoch of J2000 if empty
+ : @return the associated ut [s]
+ :)
+declare function jmmc-dateutil:UTtoMJD($ut as xs:double, $epoch as xs:double?)
+as xs:double
+{
+    let $epoch := if(exists($epoch)) then $epoch else xs:dateTime("2000-01-01T00:00:00")
+    return
+         ( $ut * xs:dayTimeDuration('PT1S') + $epoch - xs:dateTime("1858-11-17T00:00:00") ) div xs:dayTimeDuration('P1D')
 };
 
 

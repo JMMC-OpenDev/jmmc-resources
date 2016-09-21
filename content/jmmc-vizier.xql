@@ -87,6 +87,16 @@ declare %private function jmmc-vizier:catalog-section($readme as xs:string, $sec
 };
 
 (:~
+ : Extract the abstract from a catalog description.
+ : 
+ : @param $readme a catalog description (contents of the ReadMe)
+ : @return the abstract of the catalog
+ :)
+declare function jmmc-vizier:catalog-abstract($readme as xs:string) as xs:string {
+    jmmc-vizier:catalog-section($readme, 'Abstract')
+};
+
+(:~
  : Extract the description from a catalog description.
  : 
  : @param $readme a catalog description (contents of the ReadMe)
