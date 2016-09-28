@@ -17,6 +17,7 @@
                 <li>jmmc-date: add Julian Day support with jmmc-dateutil:JDtoISO8601() and jmmc-dateutil:ISO8601toJD()</li>
                 <li>jmmc-date: add UT support with jmmc-dateutil:UTtoISO8601(), jmmc-dateutil:ISO8601toUT(), jmmc-dateutil:UTtoMJD()</li>
                 <li>jmmc-vizier: add jmmc-vizier:catalog-abstract()</li>
+                <li>jmmc-cache: handle write permission failure smoothly</li>
             </ul>
         </change>
         <change version="0.16">

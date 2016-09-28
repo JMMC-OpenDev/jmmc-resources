@@ -27,7 +27,11 @@ module namespace jmmc-cache="http://exist.jmmc.fr/jmmc-resources/cache";
  : @return the given data added to the cache
  :)
 declare function jmmc-cache:insert($cache as node(), $key as xs:string, $data as item()*) as item()*{
-    let $update := update insert <cached key="{ $key }" date="{current-dateTime()}">{ $data }</cached> into $cache
+    let $insert := try {
+            update insert <cached key="{ $key }" date="{current-dateTime()}">{ $data }</cached> into $cache
+        } catch * {
+            util:log("error", $err:description)
+        }
     return $data
 };
 
@@ -93,5 +97,9 @@ declare function jmmc-cache:flush($cache as node(), $ttl as xs:dayTimeDuration?)
     let $now := current-dateTime()
     for $cached in $cache/cached
     where $now - xs:dateTime($cached/@date) > $ttl
-    return update delete $cached
+    return try {
+        update delete $cached
+    } catch * {
+        util:log("error", $err:description)
+    }
 };
