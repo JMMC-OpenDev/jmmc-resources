@@ -33,8 +33,11 @@ declare function jmmc-vizier:catalog($name as xs:string) as xs:string? {
     let $data := httpclient:get($readme-url, false(), <headers/>)
     return if ($data/@statusCode = 200) then
         util:base64-decode($data/httpclient:body/text())
-    else
-        error(xs:QName('jmmc-vizier:error'), 'Catalog description file not found')
+    else 
+        (
+        error(xs:QName('jmmc-vizier:error'), 'Catalog description file not found'),
+        util:log("error",'Catalog description file not found at '||$readme-url)
+        )
 };
 
 (:~

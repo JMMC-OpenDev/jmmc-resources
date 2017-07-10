@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.18">
+            <ul xmlns=""> 
+                <li>jmmc-vizier: add more logs on server side</li>
+            </ul>
+        </change>
         <change version="0.17">
             <ul xmlns=""> 
                 <li>Fix dependancy url for the EXPath File Transfer Client Module Implementation </li>
