@@ -154,7 +154,7 @@ declare function jmmc-vizier:catalog-creator($readme as xs:string) as xs:string 
  : @param $func predicate function applied to each file
  : @return a list of paths for files satisfying predicate
  :)
-declare %private function jmmc-vizier:ftw($connection as xs:long, $path as xs:string, $func as function) as xs:string* {
+declare %private function jmmc-vizier:ftw($connection as xs:long, $path as xs:string, $func as function(*)) as xs:string* {
     let $path := if (ends-with($path, '/')) then $path else $path || '/'
     
     let $resources := ft-client:list-resources($connection, $path)
