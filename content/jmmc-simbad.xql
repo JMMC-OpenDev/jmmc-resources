@@ -11,6 +11,7 @@ xquery version "3.0";
 module namespace jmmc-simbad="http://exist.jmmc.fr/jmmc-resources/simbad";
 
 declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.2";
+declare namespace http="http://expath.org/ns/http-client";
 
 (: The Simbad TAP endpoint :)
 declare variable $jmmc-simbad:TAP-SYNC := "http://simbad.u-strasbg.fr/simbad/sim-tap/sync";
