@@ -96,7 +96,7 @@ declare function jmmc-cache:flush($cache as node()) {
 declare function jmmc-cache:flush($cache as node(), $ttl as xs:dayTimeDuration?) {
     let $now := current-dateTime()
     for $cached in $cache/cached
-    where $now - xs:dateTime($cached/@date) > $ttl
+    where empty($ttl) or ($now - xs:dateTime($cached/@date) > $ttl)
     return try {
         update delete $cached
     } catch * {

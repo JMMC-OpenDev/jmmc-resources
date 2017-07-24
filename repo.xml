@@ -14,6 +14,7 @@
         <change version="0.18">
             <ul xmlns=""> 
                 <li>jmmc-vizier: add more logs on server side</li>
+                <li>jmmc-cache: fix code to work with exist-db V3.3 </li>
             </ul>
         </change>
         <change version="0.17">
