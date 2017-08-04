@@ -15,6 +15,7 @@
             <ul xmlns=""> 
                 <li>jmmc-vizier: add more logs on server side</li>
                 <li>jmmc-cache: fix code to work with exist-db V3.3 </li>
+                <li> SECURITY : guest access onto eXide is no prevented by a required login</li>
             </ul>
         </change>
         <change version="0.17">

@@ -14,4 +14,9 @@ declare variable $target external;
 (: fix permission of cache so everybody can get their requests cached :)
 let $op := sm:chmod( xs:anyURI(concat($target,"/data/eso-cache.xml")), "rw-rw-rw-")
 let $op := sm:chmod( xs:anyURI(concat($target,"/data/ads-cache.xml")), "rw-rw-rw-")
+
+
+(: remove public access on exide even if this is better to be not reachable from the web... :)
+let $avoid_public_exide := update replace doc("/db/apps/eXide/configuration.xml")/configuration/restrictions/@guest  with "no"
+
 return true()
