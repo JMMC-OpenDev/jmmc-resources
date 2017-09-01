@@ -7,14 +7,21 @@ xquery version "3.0";
  : coordinates) against Simbad's basic table.
  : 
  : TODO handle equinox of the coordinates / epoch
+ : History:
+ :    August 2017 : 
+ :    - use votable/td for TAP queries (so we parse some tr/td result nodes) 
+ :    - bump to V1.3 namespace
  :)
 module namespace jmmc-simbad="http://exist.jmmc.fr/jmmc-resources/simbad";
 
-declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.2";
+declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.3";
 declare namespace http="http://expath.org/ns/http-client";
 
 (: The Simbad TAP endpoint :)
 declare variable $jmmc-simbad:TAP-SYNC := "http://simbad.u-strasbg.fr/simbad/sim-tap/sync";
+
+(:  value of curretn votable namespace :)
+declare variable $jmmc-simbad:vot-ns := namespace-uri(element votable:dummy {});
 
 (:~
  : Execute an ADQL query against a TAP service.
@@ -31,7 +38,7 @@ declare %private function jmmc-simbad:tap-adql-query($uri as xs:string, $query a
     let $uri := $uri || '?' || string-join((
         'REQUEST=doQuery',
         'LANG=ADQL',
-        'FORMAT=votable',
+        'FORMAT=votable/td', 
         'QUERY=' || encode-for-uri($query)), '&amp;')
     let $response        := http:send-request(<http:request method="GET" href="{$uri}"/>)
     let $response-status := $response[1]/@status 
@@ -74,6 +81,7 @@ declare %private function jmmc-simbad:resolve($query as xs:string) as node()* {
     let $result   := jmmc-simbad:tap-adql-query($jmmc-simbad:TAP-SYNC, $query)
     let $resource := $result//votable:RESOURCE
     let $rows     := $resource//votable:TR
+    let $test-ns  := if(empty($rows) and empty($result//votable:VOTABLE)) then error(xs:QName('jmmc-simbad:TAP'), 'Missing VOTABLE in response (namespace is '|| namespace-uri($result/*)||' and should be '|| $jmmc-simbad:vot-ns ||')') else ()
     (: return target details :)
     for $r in $rows return jmmc-simbad:target($r)
 };
@@ -132,4 +140,23 @@ declare function jmmc-simbad:resolve-by-coords($ra as xs:double, $dec as xs:doub
         "FROM basic " ||
         "WHERE CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', " || $ra || ", " || $dec || ",  " || $radius || " )) = 1 " ||
         "ORDER BY dist")
+};
+
+
+(:~
+ : Search for target names that match alias of given name.
+ : @param $identifier the target name (case insensitive)
+ : @param $max-items max number of returned elements (optional - default value 10)
+ : 
+ : @return a sequence of identifiers for targets which contains given identifier value (NAME part is removed)
+ :)
+declare function jmmc-simbad:search-names($identifier as xs:string, $max-items as xs:integer? ) as item()* {
+    let $max-items := if($max-items) then $max-items else 10 
+    let $query := "SELECT TOP " || $max-items || " id FROM ident AS id1 WHERE UPPER(id1.id) LIKE 'NAME%" || upper-case($identifier) || "%'"
+    (: TODO add LIMIT:)
+    let $result   := jmmc-simbad:tap-adql-query($jmmc-simbad:TAP-SYNC, $query)
+    let $resource := $result//votable:RESOURCE
+    let $rows     := $resource//votable:TR
+    let $test-ns  := if(empty($rows) and empty($result//votable:VOTABLE)) then error(xs:QName('jmmc-simbad:TAP'), 'Missing VOTABLE in response (namespace is '|| namespace-uri($result/*)||' and should be '|| $jmmc-simbad:vot-ns ||')') else ()
+    return for $r in $rows return substring(normalize-space($r),6) 
 };

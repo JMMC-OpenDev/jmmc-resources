@@ -14,6 +14,8 @@
         <change version="0.18">
             <ul xmlns=""> 
                 <li>jmmc-vizier: add more logs on server side</li>
+                <li>jmmc-simbad: update namespace according to simbad changes on CDS side</li>
+                <li>jmmc-simbad: add search-names() so we help the user to find star by part of name (eg. Lup)</li>
                 <li>jmmc-cache: fix code to work with exist-db V3.3 </li>
                 <li> SECURITY : guest access onto eXide is no prevented by a required login</li>
             </ul>
