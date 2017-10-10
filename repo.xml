@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.19">
+            <ul xmlns=""> 
+                <li>jmmc-web: update and improve dynamic menu</li>
+            </ul>
+        </change>
         <change version="0.18">
             <ul xmlns=""> 
                 <li>jmmc-vizier: add more logs on server side</li>

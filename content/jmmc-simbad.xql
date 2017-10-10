@@ -152,8 +152,8 @@ declare function jmmc-simbad:resolve-by-coords($ra as xs:double, $dec as xs:doub
  :)
 declare function jmmc-simbad:search-names($identifier as xs:string, $max-items as xs:integer? ) as item()* {
     let $max-items := if($max-items) then $max-items else 10 
-    let $query := "SELECT TOP " || $max-items || " id FROM ident AS id1 WHERE UPPER(id1.id) LIKE 'NAME%" || upper-case($identifier) || "%'"
-    (: TODO add LIMIT:)
+    let $query := "SELECT TOP " || $max-items || " id FROM ident AS id1 WHERE UPPER(id1.id) LIKE 'NAME %" || upper-case($identifier) || "%'"
+    (: TODO avoid identifier in return :)
     let $result   := jmmc-simbad:tap-adql-query($jmmc-simbad:TAP-SYNC, $query)
     let $resource := $result//votable:RESOURCE
     let $rows     := $resource//votable:TR
