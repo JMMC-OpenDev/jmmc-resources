@@ -22,7 +22,7 @@ declare function jmmc-web:navbar-li($node as node(), $model as map(*)) as node()
  else
   <li class="dropdown">
     <a href="#" class="dropdown-toggle" style="padding:12px;" data-toggle="dropdown">
-        <img height="30" src="//jmmc.obs.ujf-grenoble.fr/images/jmmc_large.jpg"/> <span class="caret"/>
+        <img alt="logo" height="30" src="//jmmc.obs.ujf-grenoble.fr/images/jmmc_large.jpg"/> <span class="caret"/>
     </a>
     <ul class="dropdown-menu">
         <li>
