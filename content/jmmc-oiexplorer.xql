@@ -28,6 +28,6 @@ declare function jmmc-oiexplorer:to-xml($data as item()) {
  : @return nothing
  : @error failed to parse data as OIFits
  :)
-declare function jmmc-oiexplorer:check($data as item()) as empty() {
+declare function jmmc-oiexplorer:check($data as item()) {
     oi:check($data)
 };
