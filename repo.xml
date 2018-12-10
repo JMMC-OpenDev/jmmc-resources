@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+         <change version="0.21">
+            <ul xmlns=""> 
+                <li>jmmc-vizier: add dependency to install ft-client module</li>
+            </ul>
+        </change>
          <change version="0.20">
             <ul xmlns=""> 
                 <li>jmmc-oiexplorer: update oitools (fix missing keywords)</li>

@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.20" spec="1.0">
+<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.21" spec="1.0">
     <title>JMMC Commons module</title>
     <dependency processor="http://exist-db.org" semver-min="2.2.1"/>
     <!-- TODO make it resurected
          <dependency package="http://exist-db.org/apps/shared" />
-    <dependency package="http://expath.org/ns/ft-client" />
+    
+    <dependency package="http://expath.org/ns/ft-client"/>
+    should replace repo:install-and-deploy("http://expath.org/ns/ft-client", "1.1.5", "http://demo.exist-db.org/exist/apps/public-repo/modules/find.xql") in post-install
     -->
+
     <xquery>
         <namespace>http://exist.jmmc.fr/jmmc-resources/about</namespace>
         <file>jmmc-about.xql</file>
