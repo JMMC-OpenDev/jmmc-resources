@@ -70,12 +70,12 @@ function jmmc-astro:from-dms($s as xs:string) as xs:double {
  : @error failed to parse right ascension
  :)
 declare
-    %test:arg("s", "1 37 42.0")
-    %test:assertEquals(24.425)
+    %test:arg("s", "18 32 49.9577")
+    %test:assertEquals(2.7820815708333333e2)
     %test:arg("s", "bad hms")
     %test:assertError("jmmc-astro:format")
 function jmmc-astro:from-hms($s as xs:string) as xs:double {
-    let $ra := alx:parse-r-a($s)
+    let $ra := alx:parse-h-m-s($s)
     return if (string($ra) = 'NaN') then
         error(xs:QName('jmmc-astro:format'), 'Failed to parse right ascension "' || $s || '"')
     else

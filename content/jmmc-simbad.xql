@@ -20,7 +20,7 @@ declare namespace http="http://expath.org/ns/http-client";
 (: The Simbad TAP endpoint :)
 declare variable $jmmc-simbad:TAP-SYNC := "http://simbad.u-strasbg.fr/simbad/sim-tap/sync";
 
-(:  value of curretn votable namespace :)
+(: Value of current votable namespace :)
 declare variable $jmmc-simbad:vot-ns := namespace-uri(element votable:dummy {});
 
 (:~
@@ -44,7 +44,7 @@ declare %private function jmmc-simbad:tap-adql-query($uri as xs:string, $query a
     let $response-status := $response[1]/@status 
     
     return if ($response-status != 200) then
-        error(xs:QName('jmmc-simbad:TAP'), 'Failed to retrieve data for target (HTTP_STATUS='|| $response-status ||', query='||$query||')', $query) 
+        error(xs:QName('jmmc-simbad:TAP'), 'Failed to retrieve data (HTTP_STATUS='|| $response-status ||', query='||$query||')', $query) 
     else if (count($response[1]/http:body) != 1) then
         error(xs:QName('jmmc-simbad:TAP'), 'Bad content returned')
     else

@@ -10,14 +10,28 @@ xquery version "3.0";
  : 
  : It is also possible to retrieve the list of URL for OIFITS in the catalog
  : files.
+ : 
+ : It can also query VizieR though its TAP interface in sync mode.
+ : 
  :)
 module namespace jmmc-vizier="http://exist.jmmc.fr/jmmc-resources/vizier";
 
 import module namespace http-client="http://exist-db.org/xquery/httpclient";
 import module namespace ft-client="http://expath.org/ns/ft-client";
 
+declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.3";
+declare namespace http="http://expath.org/ns/http-client";
+
 (: The base URL for accessing catalog ReadMe files at VizieR :)
 declare variable $jmmc-vizier:VIZIER_CATALOGS := 'http://cdsarc.u-strasbg.fr/vizier/ftp/cats/';
+
+(: The VizieR TAP endpoint :)
+declare variable $jmmc-vizier:TAP-SYNC := "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/sync";
+
+(: Value of current votable namespace :)
+declare variable $jmmc-vizier:vot-ns := namespace-uri(element votable:dummy {});
+
+
 
 (:~
  : Retrieve and read the description file of the named catalog.
@@ -194,3 +208,34 @@ declare function jmmc-vizier:catalog-fits($name as xs:string) as xs:string* {
     let $connection := ft-client:disconnect($connection)
     return $files
 };
+
+(:~
+ : Execute an ADQL query against a TAP service.
+ :
+ : Warning: (comment was for simbad) CDS set a query limit for the TAP service of max 6 requests per second. 
+ : 403 error code is returned when limit is encountered.
+ :
+ : @param $uri   the URI of a TAP sync resource
+ : @param $query the ADQL query to execute
+ : @return a VOTable with results for the query
+ : @error service unavailable, bad response
+ :)
+declare function jmmc-vizier:tap-adql-query($uri as xs:string, $query as xs:string) as node() {
+    let $uri := $uri || '?' || string-join((
+        'REQUEST=doQuery',
+        'LANG=ADQL',
+        'FORMAT=votable', 
+        'QUERY=' || encode-for-uri($query)), '&amp;')
+    let $response        := http:send-request(<http:request method="GET" href="{$uri}"/>)
+    let $response-status := $response[1]/@status 
+    
+    return if ($response-status != 200) then
+        error(xs:QName('jmmc-vizier:TAP'), 'Failed to retrieve data (HTTP_STATUS='|| $response-status ||', query='|| $query ||', response='|| serialize($response) ||')', $query)
+    else if (count($response[1]/http:body) != 1) then
+        error(xs:QName('jmmc-vizier:TAP'), 'Bad content returned')
+    else
+        let $body := $response[2]
+        return if ($body instance of node()) then $body else util:parse($body)
+};
+
+

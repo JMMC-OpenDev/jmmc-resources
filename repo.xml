@@ -11,6 +11,12 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+         <change version="0.22">
+            <ul xmlns=""> 
+                <li>jmmc-vizier: add TAP support</li>
+                <li>jmmc-astro: parse-hms() now returns angles in 0-360 range (was -180-180)</li>
+            </ul>
+        </change>
          <change version="0.21">
             <ul xmlns=""> 
                 <li>jmmc-vizier: add dependency to install ft-client module</li>
