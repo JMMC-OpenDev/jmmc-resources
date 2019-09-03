@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+         <change version="0.23">
+            <ul xmlns=""> 
+                <li>jmmc-about: fix new map format</li>
+            </ul>
+        </change>
          <change version="0.22">
             <ul xmlns=""> 
                 <li>jmmc-vizier: add TAP support</li>
