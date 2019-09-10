@@ -64,10 +64,10 @@ function jmmc-about:changelog($node as node(), $model as map(*)) as map(*) {
     let $repo := doc($app-root || '/repo.xml')
     let $deployed := ($repo//*:deployed/text())[1]
     let $status := $repo//*:status/text()
-    let $map := map { "changes" : jmmc-about:changelog($app-root), "deployed" :  $deployed, "status" : $status}
+    let $map := map { "changes" : jmmc-about:changelog($app-root), "deployed" : $deployed, "status" : $status}
     return
         if ($status="stable") then
-                map:new(($map, map:entry("stable", true())))
+                map:merge( ($map, map {"stable" : true()}) )
             else
                 $map
 };
