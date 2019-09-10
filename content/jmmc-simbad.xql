@@ -49,7 +49,7 @@ declare %private function jmmc-simbad:tap-adql-query($uri as xs:string, $query a
         error(xs:QName('jmmc-simbad:TAP'), 'Bad content returned')
     else
         let $body := $response[2]
-        return if ($body instance of node()) then $body else util:parse($body)
+        return if ($body instance of node()) then $body else fn:parse-xml($body)
 };
 
 (:~
