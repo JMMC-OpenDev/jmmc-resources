@@ -16,7 +16,7 @@ xquery version "3.0";
  :)
 module namespace jmmc-vizier="http://exist.jmmc.fr/jmmc-resources/vizier";
 
-import module namespace http-client="http://exist-db.org/xquery/httpclient";
+(: import module namespace http-client="http://exist-db.org/xquery/httpclient"; :)
 import module namespace ft-client="http://expath.org/ns/ft-client";
 
 declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.3";
@@ -235,7 +235,7 @@ declare function jmmc-vizier:tap-adql-query($uri as xs:string, $query as xs:stri
         error(xs:QName('jmmc-vizier:TAP'), 'Bad content returned')
     else
         let $body := $response[2]
-        return if ($body instance of node()) then $body else util:parse($body)
+        return if ($body instance of node()) then $body else fn:parse-xml($body)
 };
 
 
