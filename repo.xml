@@ -17,6 +17,7 @@
                 <li>jmmc-vizier, jmmc-simbad: use fn:parse-xml</li>
                 <li>jmmc-web: fix icon path</li>
                 <li>deps: update expath-ft from 1.1.5 to 1.1.6</li>
+                <li>deps: update oitools to fix a xml keyword encoding issue</li>
             </ul>
         </change>
          <change version="0.22">
