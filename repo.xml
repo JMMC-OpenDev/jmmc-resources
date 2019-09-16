@@ -14,6 +14,9 @@
          <change version="0.23">
             <ul xmlns=""> 
                 <li>jmmc-about: fix new map format</li>
+                <li>jmmc-vizier, jmmc-simbad: use fn:parse-xml</li>
+                <li>jmmc-web: fix icon path</li>
+                <li>deps: update expath-ft from 1.1.5 to 1.1.6</li>
             </ul>
         </change>
          <change version="0.22">
