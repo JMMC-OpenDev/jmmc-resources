@@ -16,7 +16,6 @@ xquery version "3.0";
  :)
 module namespace jmmc-vizier="http://exist.jmmc.fr/jmmc-resources/vizier";
 
-(: import module namespace http-client="http://exist-db.org/xquery/httpclient"; :)
 import module namespace ft-client="http://expath.org/ns/ft-client";
 
 declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.3";
