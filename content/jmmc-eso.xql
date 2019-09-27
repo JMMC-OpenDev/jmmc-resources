@@ -28,7 +28,7 @@ declare %private function jmmc-eso:get-table( $query-url as xs:string ){
         then xs:anyURI($jmmc-eso:eos-host||$query-url) 
         else xs:anyURI($jmmc-eso:eos-url||$query-url)
     let $ua := "Mozilla/5.0 (X11; Linux x86_64; rv:24.0) Gecko/20140903 Firefox/24.0 Iceweasel/24.8.0"
-    return httpclient:get( $url, true(), <headers><header name="User-Agent" value="{$ua}"/></headers>)//table[@id="wdbresults1"]  
+    return hc:send-request( <hc:request href="{$url}" method="GET"><hc:header name="User-Agent" value="{$ua}"/></hc:request>)[2]//*:table[@id="wdbresults1"]  
 };
 
  (:~
@@ -49,13 +49,13 @@ function jmmc-eso:get-meta-from-progid($progid as xs:string*) as node()?
       if ($jmmc-eso:cache-contains($progid)) then $jmmc-eso:cache-get($progid) else
       let $table := jmmc-eso:get-table("?wdbo=html/display&amp;progid="||encode-for-uri($progid))
       (: use soft rule to detect that this progid get multiple results :)
-      let $multiple := if($table//TR[@id]) then <warning>this progid gets multiple records in the eso archive<url>{$table//TR[@id="1"]/td[1]/a/@href/string()}</url></warning> else ()
+      let $multiple := if($table//*:TR[@id]) then <warning>this progid gets multiple records in the eso archive<url>{$table//*:TR[@id="1"]/*:td[1]/*:a/@href/string()}</url></warning> else ()
       let $table := if($multiple) then     (: new url is in the first row, first column:)
           jmmc-eso:get-table( $multiple/url )
           else 
               $table 
       return try{
-        let $meta := for $tr in $table//tr let $label := translate(lower-case($tr/th),"/.?! ","_____") return element {$label} {normalize-space($tr/td)}
+        let $meta := for $tr in $table//*:tr let $label := translate(lower-case($tr/*:th),"/.?! ","_____") return element {$label} {normalize-space($tr/*:td)}
         let $record := if($meta[name()="pi_coi"]/text()) then
                             <record created="{current-dateTime()}">
                                 <progid>{$progid}</progid>
