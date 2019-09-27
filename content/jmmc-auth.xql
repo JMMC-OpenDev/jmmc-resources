@@ -7,7 +7,7 @@ xquery version "3.0";
 module namespace jmmc-auth="http://exist.jmmc.fr/jmmc-resources/auth";
 
 
-declare variable $jmmc-auth:serviceAccesspointUrl := xs:anyURI('https://jmmc.obs.ujf-grenoble.fr/account/manage.php');
+declare variable $jmmc-auth:serviceAccesspointUrl := xs:anyURI('https://apps.jmmc.fr/account/manage.php');
 
 (:~
  : @deprecated since 0.9 and replaced by get-obfuscated-email
@@ -34,15 +34,18 @@ declare function jmmc-auth:checkPassword($email, $password)
 
 declare function jmmc-auth:check-password($email, $password)
 {
-    let $fields :=
-                   <httpclient:fields>
-        <httpclient:field name="email" value="{ $email }" type="string"/>
-        <httpclient:field name="password" value="{ $password }" type="string"/>
-        <httpclient:field name="action" value="checkPassword" type="string"/>
-    </httpclient:fields>
-    let $postResponse := httpclient:post-form($jmmc-auth:serviceAccesspointUrl, $fields, false(), ())
-    (: true or false tag are embedded near the user message SUCCEEDED/FAILED :) return
-        exists($postResponse//true)
+    let $args := map { "email" : $email , "password" : $password, "action" : "checkPassword"}
+    let $req := 
+        <hc:request href="{$jmmc-auth:serviceAccesspointUrl}" method="POST">
+            <hc:body media-type="application/x-www-form-urlencoded">
+                {
+                    string-join(map:for-each($args, function($key, $value) { $key || "=" || encode-for-uri($value) }), "&amp;")    
+                }
+            </hc:body>
+        </hc:request>
+    
+    (: true or false tag are embedded near the user message SUCCEEDED/FAILED :)
+    return exists(hc:send-request($req)[2]//*:true)
 };
 
 (:~
@@ -56,15 +59,22 @@ declare function jmmc-auth:getInfo($email)
 declare function jmmc-auth:get-info($email)
 {
     if($email) then
-    let $fields :=
-        <httpclient:fields>
-        <httpclient:field name="email" value="{ $email }" type="string"/>
-        <httpclient:field name="action" value="getInfo" type="string"/>
-        </httpclient:fields>
-        let $postResponse := httpclient:post-form($jmmc-auth:serviceAccesspointUrl, $fields, false(), ())
-        let $resp := $postResponse//response[1]
-        return
-            <author> <email>{ data($email) }</email> { $resp/* } </author>
+        let $args := map { "email" : $email , "action" : "getInfo"}
+        let $req := 
+        <hc:request href="{$jmmc-auth:serviceAccesspointUrl}" method="POST">
+            <hc:body media-type="application/x-www-form-urlencoded">
+                {
+                    string-join(map:for-each($args, function($key, $value) { $key || "=" || encode-for-uri($value) }), "&amp;")    
+                }
+            </hc:body>
+        </hc:request>
+        let $resp := hc:send-request($req)[2]
+    
+    return 
+        <author> 
+            <email> { data($email) }</email>
+            { for $e in $resp//*:response/* return element {name($e)} {data($e), for $se in $e/* return element {name($se)} {data($se)}}}
+        </author>
     else
         ()
 };
