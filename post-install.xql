@@ -19,7 +19,6 @@ let $op := sm:chmod( xs:anyURI(concat($target,"/data/ads-cache.xml")), "rw-rw-rw
 (: remove public access on exide even if this is better to be not reachable from the web... :)
 (:let $avoid_public_exide := update replace doc("/db/apps/eXide/configuration.xml")/configuration/restrictions/@guest  with "no" :)
 
-(: next line still to be fixed in V5.0.0 :)
-let $dep := repo:install-and-deploy("http://expath.org/ns/ft-client", "1.1.6", "http://demo.exist-db.org/exist/apps/public-repo/modules/find.xql") 
+let $dep := repo:install-and-deploy("http://expath.org/ns/ft-client", "1.2.0", "http://demo.exist-db.org/exist/apps/public-repo/modules/find.xql") 
 
 return true()
