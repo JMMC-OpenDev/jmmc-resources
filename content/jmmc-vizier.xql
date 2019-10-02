@@ -1,4 +1,4 @@
-xquery version "3.0";
+xquery version "3.1";
 
 (:~
  : This modules contains functions to extract data from VizieR catalogs.
@@ -16,13 +16,14 @@ xquery version "3.0";
  :)
 module namespace jmmc-vizier="http://exist.jmmc.fr/jmmc-resources/vizier";
 
+import module namespace test="http://exist-db.org/xquery/xqsuite" at "resource:org/exist/xquery/lib/xqsuite/xqsuite.xql";
+
 import module namespace ft-client="http://expath.org/ns/ft-client";
 
 declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.3";
-declare namespace http="http://expath.org/ns/http-client";
 
-(: The base URL for accessing catalog ReadMe files at VizieR :)
-declare variable $jmmc-vizier:VIZIER_CATALOGS := 'http://cdsarc.u-strasbg.fr/vizier/ftp/cats/';
+(: The base URL for accessing catalog descriptions at VizieR ( default is json else ?format=html&tex=true) :)
+declare variable $jmmc-vizier:VIZIER_CATALOGS := 'http://cdsarc.u-strasbg.fr/viz-bin/ReadMe/';
 
 (: The VizieR TAP endpoint :)
 declare variable $jmmc-vizier:TAP-SYNC := "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/sync";
@@ -30,28 +31,38 @@ declare variable $jmmc-vizier:TAP-SYNC := "http://tapvizier.u-strasbg.fr/TAPVizi
 (: Value of current votable namespace :)
 declare variable $jmmc-vizier:vot-ns := namespace-uri(element votable:dummy {});
 
-
+(: Cache name for catalog descriptions :)
+declare variable $jmmc-vizier:cache-name := "jmmc-resources/vizier/catalogs";
 
 (:~
- : Retrieve and read the description file of the named catalog.
+ : Retrieve and read the description of the named catalog.
  : 
- : It gets contents of the ReadMe file from VizieR.
- : 
+ : It gets contents of the ReadMe like descriptor from VizieR from a json data source.
+
  : @param $name a catalog identifier
- : @return the text of the catalog description file
+ : @return the data structure
  : @error catalog description not found
  :)
-declare function jmmc-vizier:catalog($name as xs:string) as xs:string? {
-    let $readme-url := resolve-uri($name || '/ReadMe', $jmmc-vizier:VIZIER_CATALOGS)
-    let $data := httpclient:get($readme-url, false(), <headers/>)
-    return if ($data/@statusCode = 200) then
-        util:base64-decode($data/httpclient:body/text())
-    else 
-        (
-        error(xs:QName('jmmc-vizier:error'), 'Catalog description file not found'),
-        util:log("error",'Catalog description file not found at '||$readme-url)
-        )
+declare function jmmc-vizier:catalog($name as xs:string) as map(*)? {
+    let $name := normalize-space($name)
+    let $desc-url := resolve-uri($name, $jmmc-vizier:VIZIER_CATALOGS)
+    let $cache := cache:get($jmmc-vizier:cache-name, $name)
+    return 
+        if(exists($cache)) then 
+            $cache
+        else
+            let $data := json-doc($desc-url)
+            return 
+                if (exists($data)) then
+                    let $cacheit := cache:put($jmmc-vizier:cache-name, $name, $data)
+                    return $data
+                else 
+                    (
+                        error(xs:QName('jmmc-vizier:error'), 'Catalog description not foundat at '||$desc-url),
+                        util:log("error",'Catalog description file not found at '||$desc-url)
+                    )
 };
+
 
 (:~
  : Extract the title from a catalog description.
@@ -59,11 +70,13 @@ declare function jmmc-vizier:catalog($name as xs:string) as xs:string? {
  : It returns the abbreviated title from the first line of the description
  : next to the catalog designation.
  : 
- : @param $readme a catalog description (contents of the ReadMe)
+ : @param $name a catalog identifier
  : @return the title of the catalog
  :)
-declare function jmmc-vizier:catalog-title($readme as xs:string) as xs:string {
-    normalize-space(substring-after(tokenize($readme, '\n')[1], ' '))
+declare function jmmc-vizier:catalog-title($name as xs:string) as xs:string {
+    let $desc := jmmc-vizier:catalog($name)
+    return 
+        $desc("title")
 };
 
 (:~
@@ -71,82 +84,61 @@ declare function jmmc-vizier:catalog-title($readme as xs:string) as xs:string {
  : 
  : It returns the bibcodes for the first section.
  : 
- : @param $readme a catalog description (contents of the ReadMe)
+ : @param $name a catalog identifier
  : @return a sequence of bibcode attached to the catalog
  :)
-declare function jmmc-vizier:catalog-bibcodes($readme as xs:string) as xs:string* {
-    (: bibcodes at beginning of indented line, '='-prefixed :)
-    let $seq := subsequence(tokenize($readme, '^ +=', 'm'), 2)
-    for $s in $seq
-    (: strip prefix :)
-    let $bibcode := substring($s, 1, 19)
-    (: TODO better bibcode validator :)
-    return if (matches($bibcode, '^[0-9a-zA-Z&amp;\.]*$')) then $bibcode else ()
-};
-
-(:~
- : Return the contents of a given section in a catalog description.
- : 
- : Note that it only supports sections with indented contents (not 'File
- : Summary' and 'Byte-by-byte Description' sections) and the text returned
- : is unindented.
- : 
- : @param $readme a catalog description (contents of the ReadMe)
- : @param $section a section name
- : @return the contents of the requested section if found.
- :)
-declare %private function jmmc-vizier:catalog-section($readme as xs:string, $section as xs:string) as xs:string {
-    (: find the section header in the description :)
-    let $chunk := tokenize($readme, '^' || $section || '.*\n', 'mi')[2]
-    (: return any indented text following the header :)
-    return replace(tokenize($chunk, '^[^\s]', 'm')[1], '^ +', '', 'm')
+declare function jmmc-vizier:catalog-bibcodes($name as xs:string) as xs:string* {
+    let $desc := jmmc-vizier:catalog($name)
+    return 
+        array:flatten($desc("bibcode"))
 };
 
 (:~
  : Extract the abstract from a catalog description.
  : 
- : @param $readme a catalog description (contents of the ReadMe)
+ : @param $name a catalog identifier
  : @return the abstract of the catalog
  :)
-declare function jmmc-vizier:catalog-abstract($readme as xs:string) as xs:string {
-    jmmc-vizier:catalog-section($readme, 'Abstract')
+declare function jmmc-vizier:catalog-abstract($name as xs:string) as xs:string {
+    let $desc := jmmc-vizier:catalog($name)
+    return 
+        string-join(array:flatten($desc("abstract"))[not(position()=1)], "&#10;")
 };
 
 (:~
  : Extract the description from a catalog description.
  : 
- : @param $readme a catalog description (contents of the ReadMe)
+ : @param $name a catalog identifier
  : @return the description of the catalog
  :)
-declare function jmmc-vizier:catalog-description($readme as xs:string) as xs:string {
-    jmmc-vizier:catalog-section($readme, 'Description')
+declare function jmmc-vizier:catalog-description($name as xs:string) as xs:string {
+    let $desc := jmmc-vizier:catalog($name)
+    return 
+        string-join(array:flatten($desc("description"))[not(position()=1)], "&#10;")
 };
 
 (:~
  : Extract the date of last modification from a catalog description.
  : 
- : @param $readme a catalog description (contents of the ReadMe)
+ : @param $name a catalog identifier
  : @return the date of last modification
  :)
-declare function jmmc-vizier:catalog-date($readme as xs:string) as xs:string {
-    (: get last line of description :)
-    let $last-line := tokenize($readme, '\n')[starts-with(., '(End)')]
-    (: skip (End) marker, keep right flushed text :)
-    return tokenize($last-line, '\s+')[last()]
+declare function jmmc-vizier:catalog-date($name as xs:string) as xs:string {
+    let $desc := jmmc-vizier:catalog($name)
+    return 
+        $desc("last_update")
 };
 
 (:~
  : Extract the name of the creator of the catalog from a catalog description.
  : 
- : @param $readme a catalog description (contents of the ReadMe)
+ : @param $name a catalog identifier
  : @return the name of the catalog creator
  :)
-declare function jmmc-vizier:catalog-creator($readme as xs:string) as xs:string {
-    (: search for first indented chunk of text :)
-    (: it follows the header and full title and its lists the author names :)
-    let $chunk := tokenize($readme, '^\s+', 'm')
-    (: keep the first author as creator :)
-    return normalize-space(tokenize($chunk[2], ',')[1])
+declare function jmmc-vizier:catalog-creator($name as xs:string) as xs:string {
+    let $desc := jmmc-vizier:catalog($name)
+    return 
+        $desc("first_author")
 };
 
 (:~
@@ -192,6 +184,7 @@ declare variable $jmmc-vizier:VIZIER_CATALOGS_FTP := xs:anyURI('ftp://anonymous:
  : @return a sequence of HTTP URL of OIFITS files of the catalog
  :)
 declare function jmmc-vizier:catalog-fits($name as xs:string) as xs:string* {
+    let $name := normalize-space($name)
     (: open a FTP connection :)
     let $connection := ft-client:connect($jmmc-vizier:VIZIER_CATALOGS_FTP)
 
@@ -225,16 +218,59 @@ declare function jmmc-vizier:tap-adql-query($uri as xs:string, $query as xs:stri
         'LANG=ADQL',
         'FORMAT=votable', 
         'QUERY=' || encode-for-uri($query)), '&amp;')
-    let $response        := http:send-request(<http:request method="GET" href="{$uri}"/>)
+    let $response        := hc:send-request(<hc:request method="GET" href="{$uri}"/>)
     let $response-status := $response[1]/@status 
     
     return if ($response-status != 200) then
         error(xs:QName('jmmc-vizier:TAP'), 'Failed to retrieve data (HTTP_STATUS='|| $response-status ||', query='|| $query ||', response='|| serialize($response) ||')', $query)
-    else if (count($response[1]/http:body) != 1) then
+    else if (count($response[1]/hc:body) != 1) then
         error(xs:QName('jmmc-vizier:TAP'), 'Bad content returned')
     else
         let $body := $response[2]
         return if ($body instance of node()) then $body else fn:parse-xml($body)
+};
+
+
+declare
+    %test:assertTrue
+(:function jmmc-vizier:test-module( ) as xs:boolean {:)
+function jmmc-vizier:test-module( ) {
+    let $name := " J/A+A/597/A137" (: leave blank to ensure cleanup by subcode :)
+(:    let $cat := jmmc-vizier:catalog($name):)
+    let $abstract := jmmc-vizier:catalog-abstract($name)
+    let $bibcodes := jmmc-vizier:catalog-bibcodes($name)
+    let $creator := jmmc-vizier:catalog-creator($name)
+    let $date := jmmc-vizier:catalog-date($name)
+    let $description := jmmc-vizier:catalog-description($name)
+    let $title := jmmc-vizier:catalog-title($name)
+    let $fits := jmmc-vizier:catalog-fits($name)
+    
+    let $expected := (
+        normalize-space("The photospheric radius is one of the fundamental parameters governing the radiative equilibrium of a star. We report new observations of the nearest solar-type stars Alpha Centauri A (G2V) and B (K1V) with the VLTI/PIONIER optical interferometer. The combination of four configurations of the VLTI enable us to measure simultaneously the limb darkened angular diameter thetaLD and the limb darkening parameters of the two solar-type stars in the near-infrared H band (lambda=1.65um). We obtain photospheric angular diameters of {theta}_LD(A)_=8.502+/-0.038mas (0.43%) and {theta}_LD(B)_=5.999+/-0.025mas (0.42%), through the adjustment of a power law limb darkening model. We find H band power law exponents of {alpha}_(A)_=0.1404+/-0.0050 (3.6%) and {alpha}_(B)_=0.1545+/-0.0044 (2.8%), which closely bracket the observed solar value (alpha_{sun}_=0.15027). Combined with the parallax pi=747.17+/-0.61mas determined by Kervella et al. (2016), we derive linear radii of R_A_=1.2234+/-0.0053R_{sun}_ (0.43%) and R_B_=0.8632+/-0.0037R_{sun}_ (0.43%). The power law exponents that we derive for the two stars indicate a significantly weaker limb darkening than predicted by both 1D and 3D stellar atmosphere models. As this discrepancy is also observed on the near-infrared limb darkening profile of the Sun, an improvement of the calibration of stellar atmosphere models is clearly needed. The reported PIONIER visibility measurements of Alpha Cen A and B provide a robust basis to validate the future evolutions of these models."),
+        "2017A&amp;A...597A.137K",
+        "Kervella P.",
+        "12-Oct-2016",
+        normalize-space("The files contain all the PIONIER calibrated interferometric data obtained on Alpha Centauri A and B, as well as on the dimensional calibrator HD 123999. The data files follow the OIFITS standard of optical interferometry as defined by Pauls et al. (2005PASP..117.1255P). "),
+        "HD 123999 and Alpha Cen A and B OIFITS files (Kervella+, 2017)",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160221_HD123999.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160229_HD123999.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160301_HD123999.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160523_AlphaCenA_1.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160523_AlphaCenA_2.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160523_AlphaCenB.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160527_AlphaCenA.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160527_AlphaCenB.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160529_AlphaCenA.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160529_AlphaCenB.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160530_AlphaCenA.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160530_AlphaCenB.fits",
+        "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160530_HD123999.fits"
+    )
+        
+    let $result := ( normalize-space($abstract), $bibcodes, $creator, $date, normalize-space($description), $title, $fits )
+    let $failures := for-each-pair( $expected, $result, function ($e1, $e2){ if ($e1 = $e2) then () else "expected: "||$e1|| " , was: "||$e2} )
+    return 
+        if(empty($failures)) then true() else $failures
 };
 
 
