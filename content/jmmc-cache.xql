@@ -15,6 +15,10 @@ xquery version "3.0";
  : conceal the cache node.
  : 
  : @see http://atomic.exist-db.org/blogs/eXist/HoF
+ : 
+ : Implementor note:
+ :   since moving to existdb 5+ please prefer it's own cache mecanism
+ : 
  :)
 module namespace jmmc-cache="http://exist.jmmc.fr/jmmc-resources/cache";
 
