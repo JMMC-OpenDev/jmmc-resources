@@ -15,9 +15,10 @@
             <ul xmlns=""> 
                 <li>jmmc-cache: should be made deprecated since new existdb's cache mecanism</li>
                 <li>jmmc-about: fix new map format</li>
-                <li>jmmc-vizier, jmmc-eso, jmmc-auth: fix httpclient calls</li>
-                <li>jmmc-vizier, jmmc-simbad: use fn:parse-xml</li>
+                <li>jmmc-eso, jmmc-auth: fix httpclient calls</li>
+                <li>jmmc-simbad: use fn:parse-xml</li>
                 <li>jmmc-simbad: fix TAP request to find aliases for a given target name</li>
+                <li>jmmc-vizier: use new JSON web service for ReadMe</li>
                 <li>jmmc-web: fix icon path</li>
                 <li>deps: update expath-ft from 1.1.5 to 1.2.0</li>
                 <li>deps: update oitools to fix a xml keyword encoding issue</li>
