@@ -11,20 +11,25 @@ xquery version "3.0";
  :
  :)
 module namespace jmmc-ads="http://exist.jmmc.fr/jmmc-resources/ads";
+import module namespace test="http://exist-db.org/xquery/xqsuite" at "resource:org/exist/xquery/lib/xqsuite/xqsuite.xql";
 import module namespace jmmc-cache="http://exist.jmmc.fr/jmmc-resources/cache";
 declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts"; 
 
 (: Store server url 
  : harvard is the main server but cds hosts a mirror and is much responsive (avoid blacklist or delay)
  : declare variable $jmmc-ads:ADS_HOST := "http://adsabs.harvard.edu"; :)
-declare variable $jmmc-ads:ADS_HOST := "http://cdsads.u-strasbg.fr";
+(: declare variable $jmmc-ads:ADS_HOST := "http://cdsads.u-strasbg.fr";:)
+ declare variable $jmmc-ads:ADS_HOST := "http://adsabs.harvard.edu"; 
+
 
 (:
  base of urls to get ads abstract records in xml format.
  Some parameters may be appended to query by authors or bibcodes
  :) 
 declare variable $jmmc-ads:abs-accesspoint-url := xs:anyURI($jmmc-ads:ADS_HOST||"//cgi-bin/nph-abs_connect?");
-declare variable $jmmc-ads:abs-bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/abs/");
+
+ (: 2019-11-12 was declare variable $jmmc-ads:abs-bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/abs/"); :)
+declare variable $jmmc-ads:abs-bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/cgi-bin/nph-abs_connect?");
 
 
 declare variable $jmmc-ads:MONTHS := <months><m><n>Jan</n><v>01</v></m><m><n>Feb</n><v>02</v></m><m><n>Mar</n><v>03</v></m><m><n>Apr</n><v>04</v></m><m><n>May</n><v>05</v></m><m><n>Jun</n><v>06</v></m><m><n>Jul</n><v>07</v></m><m><n>Aug</n><v>08</v></m><m><n>Sep</n><v>09</v></m><m><n>Oct</n><v>10</v></m><m><n>Nov</n><v>11</v></m><m><n>Dec</n><v>12</v></m><m><n>n/a</n><v>01</v></m></months>;
@@ -72,6 +77,19 @@ declare function jmmc-ads:get-records($bibcodes as xs:string*) as node()*
         $retrieved
         , for $key in $existing return $jmmc-ads:cache-get($key)
         )
+};
+
+(:~ 
+ : Get ads records for every given bibcode without requesting cache. Used by test-module function.
+ : @param $bibcodes list of bibcodes
+ : @return some ads records or empty sequence
+ :)
+declare %private function jmmc-ads:get-records-no-cache($bibcodes as xs:string*) as node()*
+{
+    let $params := string-join(for $b in $bibcodes return "&amp;bibcode="||encode-for-uri($b),"")
+    let $params := $params || "&amp;nr_to_return="||count($bibcodes) || "&amp;data_type=XML"    
+    return    
+        doc($jmmc-ads:abs-bibcode-url||$params)//ads:record
 };
 
 (:~ 
@@ -138,7 +156,7 @@ declare function jmmc-ads:get-authors($record as element()) as xs:string*
  :)
 declare function jmmc-ads:get-title($record as element()) as xs:string
 {
-    $record/ads:title    
+    $record/ads:title
 };
 
 (:~
@@ -203,4 +221,16 @@ declare function jmmc-ads:get-html($records as element()*, $max-authors as xs:in
                 {$authors-str}<br/><b>{$year}</b> - <i>{$journal}</i>
             </span>
             
+};
+
+declare
+    %test:assertTrue
+(:function jmmc-vizier:test-module( ) as xs:boolean {:)
+function jmmc-ads:test-module( ) {
+    let $rec := jmmc-ads:get-records-no-cache("2017ApJ...844...72W")
+    let $title := "Submilliarcsecond Optical Interferometry of the High-mass X-Ray Binary BP Cru with VLTI/GRAVITY"
+    let $journal := "The Astrophysical Journal, Volume 844, Issue 1, article id. 72, 17 pp. (2017)."
+    let $first-author := "Waisberg, I."
+    return
+        $title = jmmc-ads:get-title($rec) and $journal = jmmc-ads:get-journal($rec) and $first-author = jmmc-ads:get-first-author($rec)
 };
