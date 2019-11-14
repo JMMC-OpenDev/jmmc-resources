@@ -20,8 +20,9 @@
                 <li>jmmc-simbad: fix TAP request to find aliases for a given target name</li>
                 <li>jmmc-vizier: use new JSON web service for ReadMe</li>
                 <li>jmmc-web: fix icon path</li>
+                <li>jmmc-ads: fix webservice endpoint waiting for a compliant API on the new ADS's webservices</li>
                 <li>deps: update expath-ft from 1.1.5 to 1.2.0</li>
-                <li>deps: update oitools to fix a xml keyword encoding issue</li>
+                <li>deps: update oitools to fix a xml keyword encoding issue and day's unit check</li>
             </ul>
         </change>
          <change version="0.22">
