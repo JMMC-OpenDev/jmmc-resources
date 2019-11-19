@@ -76,7 +76,7 @@ declare function jmmc-vizier:catalog($name as xs:string) as map(*)? {
 declare function jmmc-vizier:catalog-title($name as xs:string) as xs:string {
     let $desc := jmmc-vizier:catalog($name)
     return 
-        $desc("title")
+        ($desc("title"), $desc("title_cds"))[1]
 };
 
 (:~
