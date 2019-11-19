@@ -20,123 +20,11 @@ declare function jmmc-web:navbar-li($node as node(), $model as map(*)) as node()
  let $menu-doc := doc($jmmc-web:menu-col-path || $jmmc-web:menu-doc-name) 
  return if ($menu-doc) then $menu-doc
  else
-  <li class="dropdown">
-    <a href="#" class="dropdown-toggle" style="padding:12px;" data-toggle="dropdown">
-        <img alt="logo" height="30" src="//www.jmmc.fr/images/jmmc_large.jpg"/> <span class="caret"/>
+  <li >
+    <a href="//www.jmmc.fr">
+        <img alt="logo" height="30" src="//www.jmmc.fr/images/jmmc_large.jpg"/>
     </a>
-    <ul class="dropdown-menu">
-        <li>
-            <a href="http://www.jmmc.fr//about_jmmc.htm">Who are we ?</a>
-            <ul>
-                <li>
-                    <a href="http://www.jmmc.fr//jmm.htm">Who was JMM ?</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//jmmc_partners.htm">Partners</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//jmmc_structure.htm">Structure</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//jmmc_groups.htm">Working Groups</a>
-                </li>
-            </ul>
-        </li>
-        <li>
-            <a href="http://www.jmmc.fr//training.htm">Training</a>
-            <ul/>
-        </li>
-        <li>
-            <a href="http://www.jmmc.fr//proposals.htm">Proposal Preparation</a>
-            <ul>
-                <li>
-                    <a href="http://www.jmmc.fr//aspro_page.htm">ASPRO</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//getstar.htm">GetStar</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//searchcal_page.htm">SearchCal</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//eso_proposals.htm">VLTI Proposals</a>
-                </li>
-            </ul>
-        </li>
-        <li>
-            <a href="http://www.jmmc.fr//data_processing.htm">Data Processing</a>
-            <ul>
-                <li>
-                    <a href="http://www.jmmc.fr//data_processing_amber.htm">AMBER</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//data_processing_pionier.htm">PIONIER</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//oifitsexplorer_page.htm">OIFits Explorer</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//oival_page.htm">Oifits Validator</a>
-                </li>
-            </ul>
-        </li>
-        <li>
-            <a href="http://www.jmmc.fr//data_analysis.htm">Data Analysis</a>
-            <ul>
-                <li>
-                    <a href="http://www.jmmc.fr//litpro_page.htm">LITpro</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//oimaging.htm">OImaging</a>
-                </li>
-            </ul>
-        </li>
-        <li>
-            <a href="http://www.jmmc.fr//vo_resources.htm">
-          Databases
-          </a>
-            <ul>
-                <li>
-                    <a href="http://www.jmmc.fr//badcal">BadCal</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//catalogue_calex.htm">CalEx</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//oidb.htm">OiDB</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//catalogue_jmdc.htm">JMDC</a>
-                </li>
-                <li>
-                    <a href="http://www.jmmc.fr//catalogue_jsdc.htm">JSDC</a>
-                </li>
-            </ul>
-        </li>
-        <li>
-            <a href="http://www.jmmc.fr//vo_resources.htm">
-          VO tool
-          </a>
-            <ul>
-                <li>
-                    <a href="http://www.jmmc.fr//applauncher_page.htm">AppLauncher</a>
-                </li>
-            </ul>
-        </li>
-        <li>
-            <a href="http://www.jmmc.fr//support.htm">User Support</a>
-            <ul/>
-        </li>
-        <li>
-            <a href="http://www.jmmc.fr//database_olbin_publications.htm">Publications</a>
-            <ul/>
-        </li>
-        <li>
-            <a href="http://www.jmmc.fr//job_offers.htm">Job Offers</a>
-            <ul/>
-        </li>
-    </ul>
-</li>
+  </li>
 
 };
 
@@ -145,7 +33,7 @@ declare function jmmc-web:navbar-li($node as node(), $model as map(*)) as node()
  : This will request the main www.jmmc.fr web page on each call.  Prefer to get the 
  : copied/paste content using get-jmmc-nav-bar
  : @return a li element to include in bootstrap navbar
- : NOT TESTED PROPERLY
+ : NOT TESTED PROPERLY and no more compatible with SPIP version to be release before end of 2019
  :)
 declare function jmmc-web:compute-navbar() as node() {
 let $div:=doc("http://www.jmmc.fr/")//xhtml:div[@id="sectionLinks"]
