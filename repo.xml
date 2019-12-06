@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+         <change version="0.24">
+            <ul xmlns=""> 
+                <li>deps: update oitools to set severity to INFO for the UNKNOWN_TABLE rule instead of SEVERE</li>
+            </ul>
+        </change>
          <change version="0.23">
             <ul xmlns=""> 
                 <li>jmmc-cache: should be made deprecated since new existdb's cache mecanism</li>
