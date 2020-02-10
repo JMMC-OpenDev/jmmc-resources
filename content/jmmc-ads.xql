@@ -7,7 +7,29 @@ xquery version "3.0";
  : Prefer the use of utility function to retrieved content or use the following namespace to work directly on ads records:
  : declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts"; 
  : Note: get-record and get-record functions always cache retrieved records
- : TODO: add new functions in the API to perform fresh data retrieval. 
+ : TODO: move to the new API. 
+
+Code snipet to use new API
+xquery version "3.1";
+
+let $token := "placehereyourtoken"
+
+let $req := <hc:request href="https://api.adsabs.harvard.edu/v1/export/refabsxml" method="POST">
+    <hc:header name="Authorization" value="Bearer {$token}"/>
+    <hc:body media-type="application/json"method="text">{{"bibcode": ["2000A&amp;AS..143...41K", "2000A&amp;AS..143...85A", "2000A&amp;AS..143..111G"]}}</hc:body>
+</hc:request>
+
+let $response      := hc:send-request($req)
+let $response-head := head($response)
+let $response-body := tail($response)
+let $xml := parse-xml(parse-json(util:binary-to-string($response-body))("export"))
+return
+    (
+        $response-head,
+        util:binary-to-string($response-body),
+        $xml   
+    )
+
  :
  :)
 module namespace jmmc-ads="http://exist.jmmc.fr/jmmc-resources/ads";

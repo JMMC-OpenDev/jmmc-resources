@@ -11,7 +11,12 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
-         <change version="0.24">
+        <change version="0.25">
+            <ul xmlns=""> 
+                <li>deps: update oitools to consider as a single instrument multiples INSNAMEs which starts with INSTRUME keyword.</li>
+            </ul>
+        </change>
+        <change version="0.24">
             <ul xmlns=""> 
                 <li>deps: update oitools to set severity to INFO for the UNKNOWN_TABLE rule instead of SEVERE</li>
             </ul>
