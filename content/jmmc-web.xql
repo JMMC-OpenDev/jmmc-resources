@@ -49,7 +49,7 @@ let $lis:= for $l1 in $div/xhtml:li let $a := $l1/xhtml:a let $href := if(contai
         </li>
         
 let $ret := <li class="dropdown">
-    <a href="#" class="dropdown-toggle" style="padding:12px;" data-toggle="dropdown"><img height="30" src="//jmmc.obs.ujf-grenoble.fr/images/jmmc_large.jpg"/>&#160;<span class="caret"></span></a>
+    <a href="#" class="dropdown-toggle" style="padding:12px;" data-toggle="dropdown"><img height="30" src="//apps.jmmc.fr/images/jmmc_large.jpg"/>&#160;<span class="caret"></span></a>
     <ul class="dropdown-menu">        
     {$lis}
     </ul>
