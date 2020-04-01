@@ -46,7 +46,7 @@ declare
 function jmmc-eso:get-meta-from-progid($progid as xs:string*) as node()?
 {
   if (string-length($progid)>0) then
-      if ($jmmc-eso:cache-contains($progid)) then $jmmc-eso:cache-get($progid) else
+      if ($jmmc-eso:cache-contains($progid)) then $jmmc-eso:cache-get($progid)[1] else
       let $table := jmmc-eso:get-table("?wdbo=html/display&amp;progid="||encode-for-uri($progid))
       (: use soft rule to detect that this progid get multiple results :)
       let $tr :=($table//*:TR[@id="1"],$table//*:tr[@id="1"])[1]
