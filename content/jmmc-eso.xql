@@ -49,13 +49,17 @@ function jmmc-eso:get-meta-from-progid($progid as xs:string*) as node()?
       if ($jmmc-eso:cache-contains($progid)) then $jmmc-eso:cache-get($progid) else
       let $table := jmmc-eso:get-table("?wdbo=html/display&amp;progid="||encode-for-uri($progid))
       (: use soft rule to detect that this progid get multiple results :)
-      let $multiple := if($table//*:TR[@id]) then <warning>this progid gets multiple records in the eso archive<url>{$table//*:TR[@id="1"]/*:td[1]/*:a/@href/string()}</url></warning> else ()
+      let $tr :=($table//*:TR[@id="1"],$table//*:tr[@id="1"])[1]
+      let $multiple := if($tr) then <warning>this progid gets multiple records in the eso archive<url>{$tr/*:td[1]/*:a/@href/string()}</url></warning> else ()
       let $table := if($multiple) then     (: new url is in the first row, first column:)
           jmmc-eso:get-table( $multiple/url )
           else 
               $table 
       return try{
-        let $meta := for $tr in $table//*:tr let $label := translate(lower-case($tr/*:th),"/.?! ","_____") return element {$label} {normalize-space($tr/*:td)}
+        let $meta := for $tr in $table//*:tr 
+                        let $label := translate(lower-case($tr/*:th),"/.?! ","_____") 
+                        return
+                            element {$label} {normalize-space($tr/*:td)}
         let $record := if($meta[name()="pi_coi"]/text()) then
                             <record created="{current-dateTime()}">
                                 <progid>{$progid}</progid>
@@ -66,6 +70,7 @@ function jmmc-eso:get-meta-from-progid($progid as xs:string*) as node()?
                     else ()
         return $jmmc-eso:cache-insert($progid, $record)
       }catch * {
+        util:log("error", $err:description),
         error(xs:QName('jmmc-eso:get-meta-from-progid'), 'Failed to retrieve data for progid='|| $progid) 
         (: <error>{$table,$multiple}</error> :)
       }
