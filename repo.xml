@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.26">
+            <ul xmlns=""> 
+                <li>jmmc-eso: adjust wdb html decryption</li>
+            </ul>
+        </change>
         <change version="0.25">
             <ul xmlns=""> 
                 <li>deps: update oitools to consider as a single instrument multiples INSNAMEs which starts with INSTRUME keyword.</li>
