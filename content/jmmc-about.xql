@@ -85,9 +85,17 @@ declare
     %templates:wrap
 function jmmc-about:version($node as node(), $model as map(*)) as xs:string? {
     let $changes := $model("changes")
-    (: Note: turn version into number for comparison :)
-    (: force version number format to all numbers and single dot and XX.9 after XX.10 :)
-    let $version := $changes[@version=max($changes/@version)]/@version
+    let $version := ($changes/@version)[1]
+    
+(:  or we could try a more sophisticated one.. but lot of calcs:) 
+(:   let $c := sum(for $t at $pos in tokenize( replace($e,"([A-z])","") ,"\.") :)
+(:            let $pow := switch ($pos):)
+(:            case 1 return 6:)
+(:            case 2 return 3:)
+(:            default return ():)
+(:            return math:pow(10, $pow) * number($t)):)
+(:        order by $c descending:)
+
     return if($version) then $version else "not provided"
 };
 (:~
@@ -126,18 +134,17 @@ function jmmc-about:deployed($node as node(), $model as map(*)) as xs:string? {
 (:~
  : Return the current version number of the application as an attribute.
  : 
- : It does not rely on model like jmmc-about:version above.
+ : It does rely on model like jmmc-about:version above.
  : 
  : @param $node
  : @param $model
- : @param $attrname the name wanted forthe returned attribute
+ : @param $attrname the name wanted for the returned attribute
  : @return an attribute of given name with value equal to application version.
  :)
 declare
     %templates:wrap
 function jmmc-about:version-as-attribute($node as node(), $model as map(*), $attrname as xs:string) as attribute() {    
-    let $changes := $model("changes")
-    return attribute { $attrname }  { $changes[@version=max($changes/@version)]/@version }
+    attribute { $attrname }  { jmmc-about:version($node, $model) }
 };
 
 (:~

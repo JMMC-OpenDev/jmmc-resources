@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.27">
+            <ul xmlns=""> 
+                <li>jmmc-about: fix current version getter </li>
+            </ul>
+        </change>
         <change version="0.26">
             <ul xmlns=""> 
                 <li>jmmc-eso: adjust wdb html decryption</li>
