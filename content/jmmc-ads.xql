@@ -49,7 +49,7 @@ declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts";
  Some parameters may be appended to query by authors or bibcodes
  :) 
 declare variable $jmmc-ads:abs-bibcode-url := xs:anyURI($jmmc-ads:ADS_CDS_HOST||"/cgi-bin/nph-abs_connect?");
-declare variable $jmmc-ads:bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/abs");
+declare variable $jmmc-ads:bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/abs/");
 
 declare variable $jmmc-ads:MONTHS := <months><m><n>Jan</n><v>01</v></m><m><n>Feb</n><v>02</v></m><m><n>Mar</n><v>03</v></m><m><n>Apr</n><v>04</v></m><m><n>May</n><v>05</v></m><m><n>Jun</n><v>06</v></m><m><n>Jul</n><v>07</v></m><m><n>Aug</n><v>08</v></m><m><n>Sep</n><v>09</v></m><m><n>Oct</n><v>10</v></m><m><n>Nov</n><v>11</v></m><m><n>Dec</n><v>12</v></m><m><n>n/a</n><v>01</v></m></months>;
 
