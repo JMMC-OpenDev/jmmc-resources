@@ -42,17 +42,14 @@ declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts";
  : declare variable $jmmc-ads:ADS_HOST := "http://adsabs.harvard.edu"; :)
 (: declare variable $jmmc-ads:ADS_HOST := "http://cdsads.u-strasbg.fr";:)
  declare variable $jmmc-ads:ADS_HOST := "http://adsabs.harvard.edu"; 
-
+ declare variable $jmmc-ads:ADS_CDS_HOST := "http://cdsads.u-strasbg.fr";
 
 (:
  base of urls to get ads abstract records in xml format.
  Some parameters may be appended to query by authors or bibcodes
  :) 
-declare variable $jmmc-ads:abs-accesspoint-url := xs:anyURI($jmmc-ads:ADS_HOST||"//cgi-bin/nph-abs_connect?");
-
- (: 2019-11-12 was declare variable $jmmc-ads:abs-bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/abs/"); :)
-declare variable $jmmc-ads:abs-bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/cgi-bin/nph-abs_connect?");
-
+declare variable $jmmc-ads:abs-bibcode-url := xs:anyURI($jmmc-ads:ADS_CDS_HOST||"/cgi-bin/nph-abs_connect?");
+declare variable $jmmc-ads:bibcode-url := xs:anyURI($jmmc-ads:ADS_HOST||"/abs");
 
 declare variable $jmmc-ads:MONTHS := <months><m><n>Jan</n><v>01</v></m><m><n>Feb</n><v>02</v></m><m><n>Mar</n><v>03</v></m><m><n>Apr</n><v>04</v></m><m><n>May</n><v>05</v></m><m><n>Jun</n><v>06</v></m><m><n>Jul</n><v>07</v></m><m><n>Aug</n><v>08</v></m><m><n>Sep</n><v>09</v></m><m><n>Oct</n><v>10</v></m><m><n>Nov</n><v>11</v></m><m><n>Dec</n><v>12</v></m><m><n>n/a</n><v>01</v></m></months>;
 
@@ -212,7 +209,7 @@ declare function jmmc-ads:get-bibcode($record as element()) as xs:string
  :)
 declare function jmmc-ads:get-link($bibcode as xs:string, $label as xs:string?) as node()
 {
-    let $url := $jmmc-ads:abs-bibcode-url||encode-for-uri($bibcode)
+    let $url := $jmmc-ads:bibcode-url||encode-for-uri($bibcode)
     return <a href="{$url}">{if($label) then $label else $bibcode}</a>
 };
 
