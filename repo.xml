@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.29">
+            <ul xmlns=""> 
+                <li>jmmc-vizier: small changes to follow CDS's ones.</li>
+            </ul>
+        </change>
         <change version="0.28">
             <ul xmlns=""> 
                 <li>jmmc-ads: still fix webservice endpoint waiting for a compliant API on the new ADS's webservices</li>

@@ -101,8 +101,9 @@ declare function jmmc-vizier:catalog-bibcodes($name as xs:string) as xs:string* 
  :)
 declare function jmmc-vizier:catalog-abstract($name as xs:string) as xs:string {
     let $desc := jmmc-vizier:catalog($name)
-    return 
-        string-join(array:flatten($desc("abstract"))[not(position()=1)], "&#10;")
+    return
+        string-join(data($desc?abstract), "&#10;")
+  
 };
 
 (:~
@@ -114,7 +115,7 @@ declare function jmmc-vizier:catalog-abstract($name as xs:string) as xs:string {
 declare function jmmc-vizier:catalog-description($name as xs:string) as xs:string {
     let $desc := jmmc-vizier:catalog($name)
     return 
-        string-join(array:flatten($desc("description"))[not(position()=1)], "&#10;")
+        string-join(data($desc?description), "&#10;")
 };
 
 (:~
@@ -249,9 +250,9 @@ function jmmc-vizier:test-module( ) {
         normalize-space("The photospheric radius is one of the fundamental parameters governing the radiative equilibrium of a star. We report new observations of the nearest solar-type stars Alpha Centauri A (G2V) and B (K1V) with the VLTI/PIONIER optical interferometer. The combination of four configurations of the VLTI enable us to measure simultaneously the limb darkened angular diameter thetaLD and the limb darkening parameters of the two solar-type stars in the near-infrared H band (lambda=1.65um). We obtain photospheric angular diameters of {theta}_LD(A)_=8.502+/-0.038mas (0.43%) and {theta}_LD(B)_=5.999+/-0.025mas (0.42%), through the adjustment of a power law limb darkening model. We find H band power law exponents of {alpha}_(A)_=0.1404+/-0.0050 (3.6%) and {alpha}_(B)_=0.1545+/-0.0044 (2.8%), which closely bracket the observed solar value (alpha_{sun}_=0.15027). Combined with the parallax pi=747.17+/-0.61mas determined by Kervella et al. (2016), we derive linear radii of R_A_=1.2234+/-0.0053R_{sun}_ (0.43%) and R_B_=0.8632+/-0.0037R_{sun}_ (0.43%). The power law exponents that we derive for the two stars indicate a significantly weaker limb darkening than predicted by both 1D and 3D stellar atmosphere models. As this discrepancy is also observed on the near-infrared limb darkening profile of the Sun, an improvement of the calibration of stellar atmosphere models is clearly needed. The reported PIONIER visibility measurements of Alpha Cen A and B provide a robust basis to validate the future evolutions of these models."),
         "2017A&amp;A...597A.137K",
         "Kervella P.",
-        "12-Oct-2016",
+        "23-Jan-2017",
         normalize-space("The files contain all the PIONIER calibrated interferometric data obtained on Alpha Centauri A and B, as well as on the dimensional calibrator HD 123999. The data files follow the OIFITS standard of optical interferometry as defined by Pauls et al. (2005PASP..117.1255P). "),
-        "HD 123999 and Alpha Cen A and B OIFITS files (Kervella+, 2017)",
+        "HD 123999 and Alpha Cen A and B OIFITS files",
         "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160221_HD123999.fits",
         "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160229_HD123999.fits",
         "http://cdsarc.u-strasbg.fr/vizier/ftp/cats/J/A+A/597/A137/oifits/20160301_HD123999.fits",
