@@ -14,6 +14,10 @@
         <file>jmmc-about.xql</file>
     </xquery>
     <xquery>
+        <namespace>http://exist.jmmc.fr/jmmc-resources/adsabs</namespace>
+        <file>adsabs.xql</file>
+    </xquery>
+    <xquery>
         <namespace>http://exist.jmmc.fr/jmmc-resources/ads</namespace>
         <file>jmmc-ads.xql</file>
     </xquery>

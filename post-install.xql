@@ -15,6 +15,11 @@ declare variable $target external;
 let $op := sm:chmod( xs:anyURI(concat($target,"/data/eso-cache.xml")), "rw-rw-rw-")
 let $op := sm:chmod( xs:anyURI(concat($target,"/data/ads-cache.xml")), "rw-rw-rw-")
 
+(: adsabs module stores xml in cache :)
+let $op := xmldb:create-collection("/", "ads")
+let $op := xmldb:create-collection("/ads", "records")
+let $op := sm:chmod( xs:anyURI(concat($target,"/ads/records")), "rwxrwxrwx")
+
 
 (: remove public access on exide even if this is better to be not reachable from the web... :)
 (:let $avoid_public_exide := update replace doc("/db/apps/eXide/configuration.xml")/configuration/restrictions/@guest  with "no" :)
