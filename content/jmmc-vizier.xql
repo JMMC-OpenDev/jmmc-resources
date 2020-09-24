@@ -23,7 +23,12 @@ import module namespace ft-client="http://expath.org/ns/ft-client";
 declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.3";
 
 (: The base URL for accessing catalog descriptions at VizieR ( default is json else ?format=html&tex=true) :)
-declare variable $jmmc-vizier:VIZIER_CATALOGS := 'http://cdsarc.u-strasbg.fr/viz-bin/ReadMe/';
+declare variable $jmmc-vizier:VIZIER_BASE := 'http://cdsarc.u-strasbg.fr/viz-bin/';
+declare variable $jmmc-vizier:VIZIER_README := $jmmc-vizier:VIZIER_BASE||'ReadMe/';
+declare variable $jmmc-vizier:VIZIER_CATALOGS := $jmmc-vizier:VIZIER_BASE||'cat/';
+(: The base FTP url for accessing catalog files :)
+declare variable $jmmc-vizier:VIZIER_CATALOGS_FTP := xs:anyURI('ftp://anonymous:@cdsarc.u-strasbg.fr/pub/cats');
+
 
 (: The VizieR TAP endpoint :)
 declare variable $jmmc-vizier:TAP-SYNC := "http://tapvizier.u-strasbg.fr/TAPVizieR/tap/sync";
@@ -45,7 +50,7 @@ declare variable $jmmc-vizier:cache-name := "jmmc-resources/vizier/catalogs";
  :)
 declare function jmmc-vizier:catalog($name as xs:string) as map(*)? {
     let $name := normalize-space($name)
-    let $desc-url := resolve-uri($name, $jmmc-vizier:VIZIER_CATALOGS)
+    let $desc-url := resolve-uri($name, $jmmc-vizier:VIZIER_README)
     let $cache := cache:get($jmmc-vizier:cache-name, $name)
     return 
         if(exists($cache)) then 
@@ -172,9 +177,6 @@ declare %private function jmmc-vizier:ftw($connection as xs:long, $path as xs:st
     )
 };
 
-(: The base FTP url for accessing catalog files :)
-declare variable $jmmc-vizier:VIZIER_CATALOGS_FTP := xs:anyURI('ftp://anonymous:@cdsarc.u-strasbg.fr/pub/cats');
-
 (:~
  : Get the URLs of OIFITS files attached to a VizieR catalog.
  : 
@@ -200,6 +202,18 @@ declare function jmmc-vizier:catalog-fits($name as xs:string) as xs:string* {
 
     let $connection := ft-client:disconnect($connection)
     return $files
+};
+
+(:~
+ : Helper to build an URL to a given catalogue on VizieR.
+ :
+ : @param $name catalogue name
+ : @param $label optionnal link text (use name by default)
+ : @return an URL to the VizieR astronomical catalogue as string
+ :)
+declare function jmmc-vizier:get-link($name as xs:string, $label as item()*) as node() {
+    let $url := resolve-uri($name, $jmmc-vizier:VIZIER_CATALOGS) (: we may have to encode catalog name ?? :)
+    return <a href="{$url}">{if(exists($label)) then $label else $name}</a>
 };
 
 (:~
