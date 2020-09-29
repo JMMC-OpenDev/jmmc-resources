@@ -1,2 +1,3 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<secret-ads-token>ReplaceWithYourToken</secret-ads-token>
+<!-- Please move outside of the package if you want to keep a persistant storage accross module updates -->
+<ads-token>ReplaceWithYourToken</ads-token>

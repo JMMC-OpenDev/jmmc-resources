@@ -30,7 +30,7 @@ declare variable $adsabs:collection-uri := "/ads/records/";
 declare variable $adsabs:cache-name := "adsabs-cache";
 declare variable $adsabs:token-cache-name := $adsabs:cache-name || "-token";
 declare variable $adsabs:token-cache-value := cache:get($adsabs:cache-name, $adsabs:token-cache-name);
-declare variable $adsabs:token := if( exists($adsabs:token-cache-value) ) then $adsabs:token-cache-value else data(collection("/db")//secret-ads-token[1]) ;
+declare variable $adsabs:token := if( exists($adsabs:token-cache-value) ) then $adsabs:token-cache-value else data(collection("/db")//ads-token[1]) ;
 (: add basic helper to set token in memory (cache) out of source code :)
 declare variable $adsabs:token-check := if ( exists($adsabs:token)) then () else util:log("error", "please save a token element in db or run cache:put('"||$adsabs:cache-name||"', '" || $adsabs:token-cache-name || "', 'XXXXXXXXXXXXXX')");
 
@@ -42,6 +42,9 @@ declare variable $adsabs:expirable-cache := cache:create($adsabs:expirable-cache
 (: store server url :)
 declare variable $adsabs:ABS_ROOT := "https://ui.adsabs.harvard.edu/abs/";
 declare variable $adsabs:API_ROOT := "https://api.adsabs.harvard.edu/v1"; 
+
+
+declare variable $adsabs:MONTHS := <months><m><n>Jan</n><v>01</v></m><m><n>Feb</n><v>02</v></m><m><n>Mar</n><v>03</v></m><m><n>Apr</n><v>04</v></m><m><n>May</n><v>05</v></m><m><n>Jun</n><v>06</v></m><m><n>Jul</n><v>07</v></m><m><n>Aug</n><v>08</v></m><m><n>Sep</n><v>09</v></m><m><n>Oct</n><v>10</v></m><m><n>Nov</n><v>11</v></m><m><n>Dec</n><v>12</v></m><m><n>n/a</n><v>01</v></m></months>;
 
 
 declare function adsabs:query( $query-url as xs:string, $query-payload as xs:string?) as xs:string {
