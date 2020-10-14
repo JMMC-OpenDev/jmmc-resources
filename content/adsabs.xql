@@ -19,8 +19,6 @@ import module namespace test="http://exist-db.org/xquery/xqsuite" at "resource:o
 
 
 declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts"; 
-(: should be http://ads.harvard.edu/schema/abs/1.1/abstracts:)
-
 
 (: define ads cache collection path to store documents :)
 declare variable $adsabs:collection-uri := "/ads/records/";
