@@ -18,7 +18,7 @@ import module namespace http = "http://expath.org/ns/http-client";
 import module namespace test="http://exist-db.org/xquery/xqsuite" at "resource:org/exist/xquery/lib/xqsuite/xqsuite.xql";
 
 
-declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstract"; 
+declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts"; 
 (: should be http://ads.harvard.edu/schema/abs/1.1/abstracts:)
 
 
@@ -30,7 +30,7 @@ declare variable $adsabs:collection-uri := "/ads/records/";
 declare variable $adsabs:cache-name := "adsabs-cache";
 declare variable $adsabs:token-cache-name := $adsabs:cache-name || "-token";
 declare variable $adsabs:token-cache-value := cache:get($adsabs:cache-name, $adsabs:token-cache-name);
-declare variable $adsabs:token := if( exists($adsabs:token-cache-value) ) then $adsabs:token-cache-value else data(collection("/db")//ads-token[1]) ;
+declare variable $adsabs:token := if( exists($adsabs:token-cache-value) ) then $adsabs:token-cache-value else data(collection("/db")//ads-token[not(.="ReplaceWithYourToken")])[1] ;
 (: add basic helper to set token in memory (cache) out of source code :)
 declare variable $adsabs:token-check := if ( exists($adsabs:token)) then () else util:log("error", "please save a token element in db or run cache:put('"||$adsabs:cache-name||"', '" || $adsabs:token-cache-name || "', 'XXXXXXXXXXXXXX')");
 
@@ -110,7 +110,8 @@ declare function adsabs:get-records($bibcodes as xs:string*, $use-cache as xs:bo
 {
     let $cached-records := if ($use-cache) then collection($adsabs:collection-uri)//ads:record[ads:bibcode=$bibcodes] else ()
     
-    let $bibcodes-todo := $bibcodes[not(.=$cached-records/ads:bibcode)]
+    let $bibcodes-todo := $bibcodes[not($use-cache) or not(.=$cached-records/ads:bibcode)]
+(:    let $bibcodes-todo := $bibcodes[not(.=$cached-records/ads:bibcode)]:)
     
     (: TODO perform a load test to check limit of returned records 2000 ? :)
     let $new-records := if ( exists($bibcodes-todo) ) then 

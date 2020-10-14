@@ -11,10 +11,15 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.30">
+            <ul xmlns=""> 
+                <li>adsabs: change ads namespace according related to issue fix on ADS side.</li>
+            </ul>
+        </change>
         <change version="0.29">
             <ul xmlns=""> 
                 <li>jmmc-vizier: small changes to follow CDS's ones.</li>
-                <li>introduce jmmc-adsabs: should replace ads module in the future.</li>
+                <li>introduce adsabs: should replace ads module in the future.</li>
             </ul>
         </change>
         <change version="0.28">
