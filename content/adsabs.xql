@@ -22,6 +22,10 @@ declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts";
 
 (: define ads cache collection path to store documents :)
 declare variable $adsabs:collection-uri := "/ads/records/";
+(: TODO add reset function for dba ?
+ :  let $collection-uri := "/db/ads/records"
+ :  for $resource in xmldb:get-child-resources($collection-uri) return xmldb:remove($collection-uri, $resource)
+:)
 
 
 (: handle token using a cache :)
@@ -46,8 +50,13 @@ declare variable $adsabs:MONTHS := <months><m><n>Jan</n><v>01</v></m><m><n>Feb</
 
 
 declare function adsabs:query( $query-url as xs:string, $query-payload as xs:string?) as xs:string {
+    adsabs:query( $query-url, $query-payload, true())
+};
+
+declare function adsabs:query( $query-url as xs:string, $query-payload as xs:string?, $use-cache as xs:boolean) as xs:string {
+    
     let $key := $query-url || $query-payload
-    let $value := cache:get($adsabs:expirable-cache-name, $key)
+    let $value := if($use-cache) then cache:get($adsabs:expirable-cache-name, $key) else ()
     return 
         if (exists($value) ) then $value
         else if ( exists($adsabs:token) and $adsabs:token ) then 
@@ -72,12 +81,12 @@ declare function adsabs:query( $query-url as xs:string, $query-payload as xs:str
         	            if ($response-head/@status = ("200","404"))
         	            then
         	                let $json := util:binary-to-string($response-body)
-        	                let $cache := cache:put($adsabs:expirable-cache-name, $key, $json)
+        	                let $cache := if($use-cache) then cache:put($adsabs:expirable-cache-name, $key, $json) else ()
                             return $json
         	            else
         	                (util:log("error",replace(serialize($request), $adsabs:token, "XXXXXXXX")),
         	                util:log("error",serialize($response-head)),
-        	                util:log("error", "token is " || $adsabs:token),
+(:        	                util:log("error", "token is " || $adsabs:token),:)
         	                fn:error(xs:QName("adsabs:bad-request-1"), $response-head))
         else
             (
@@ -150,8 +159,38 @@ declare function adsabs:get-records($bibcodes as xs:string*)
 
 declare function adsabs:get-libraries()
 {
-    adsabs:query("/biblib/libraries", ())
+    adsabs:query("/biblib/libraries", (), false())
 };
+
+declare function adsabs:libraries-diff($primary-id, $secondary-ids)
+{
+    let $action := "difference"
+    let $payload := '{"action":"'||$action||'" ,"libraries": [' || string-join(for $id in $secondary-ids return "&quot;"||$id||"&quot;", ", ") || "]}"
+    return
+        adsabs:query("/biblib/libraries/operations/"||$primary-id, $payload, false())
+};
+
+
+declare function adsabs:library($id)
+{
+    adsabs:query("/biblib/libraries/"||$id, (), false())
+};
+
+declare function adsabs:library-add($id, $bibcodes){
+  adsabs:library-add-or-remove($id, $bibcodes, "add") 
+};
+
+declare function adsabs:library-remove($id, $bibcodes){
+  adsabs:library-add-or-remove($id, $bibcodes, "remove")  
+};
+
+declare %private function adsabs:library-add-or-remove($id, $bibcodes, $action){
+    let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
+    let $payload := '{"action":"'||$action||'" ,"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
+    return 
+        adsabs:query("/biblib/documents/"||$id, $payload, false())  
+};
+
 
 declare function adsabs:search($query as xs:string, $fl as xs:string?)
 {
