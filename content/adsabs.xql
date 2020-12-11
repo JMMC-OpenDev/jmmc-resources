@@ -27,6 +27,10 @@ declare variable $adsabs:collection-uri := "/ads/records/";
  :  for $resource in xmldb:get-child-resources($collection-uri) return xmldb:remove($collection-uri, $resource)
 :)
 
+(: consider some journal as non refereed even marked as refereed on ADS side :)
+declare variable $adsabs:filtered-journals := ("SPIE", "ASPC", "PhDT", "arXiv");
+
+
 
 (: handle token using a cache :)
 declare variable $adsabs:cache-name := "adsabs-cache";
@@ -37,12 +41,14 @@ declare variable $adsabs:token := if( exists($adsabs:token-cache-value) ) then $
 declare variable $adsabs:token-check := if ( exists($adsabs:token)) then () else util:log("error", "please save a token element in db or run cache:put('"||$adsabs:cache-name||"', '" || $adsabs:token-cache-name || "', 'XXXXXXXXXXXXXX')");
 
 (: use a cache for repeated querys :)
-declare variable $adsabs:expirable-cache-name := $adsabs:cache-name || "-expirable";
-declare variable $adsabs:expirable-cache := cache:create($adsabs:expirable-cache-name,map { "expireAfterAccess": 600000 }); (: 10' :)
+declare variable $adsabs:expirable-cache-name := $adsabs:cache-name || "-queries";
+(: cache:clear or cache:remove can be asked on demand on updates, else cache get expirarion delay :)
+declare variable $adsabs:expirable-cache := cache:create($adsabs:expirable-cache-name,map { "expireAfterAccess": 36000000 }); (: 10h :)
 
 
 (: store server url :)
 declare variable $adsabs:ABS_ROOT := "https://ui.adsabs.harvard.edu/abs/";
+declare variable $adsabs:SEARCH_ROOT := "https://ui.adsabs.harvard.edu/search/";
 declare variable $adsabs:API_ROOT := "https://api.adsabs.harvard.edu/v1"; 
 
 
@@ -54,6 +60,14 @@ declare function adsabs:query( $query-url as xs:string, $query-payload as xs:str
 };
 
 declare function adsabs:query( $query-url as xs:string, $query-payload as xs:string?, $use-cache as xs:boolean) as xs:string {
+    adsabs:query( $query-url, $query-payload, $use-cache, "POST")
+};
+
+declare function adsabs:query-update( $query-url as xs:string, $query-payload as xs:string?, $use-cache as xs:boolean) as xs:string {
+    adsabs:query( $query-url, $query-payload, $use-cache, "PUT")
+};
+
+declare function adsabs:query( $query-url as xs:string, $query-payload as xs:string?, $use-cache as xs:boolean, $method-if-payload as xs:string) as xs:string {
     
     let $key := $query-url || $query-payload
     let $value := if($use-cache) then cache:get($adsabs:expirable-cache-name, $key) else ()
@@ -66,7 +80,7 @@ declare function adsabs:query( $query-url as xs:string, $query-payload as xs:str
                     <http:body media-type="text/plain">{$query-payload}</http:body>
                 else
                     ()
-            let $method := if (exists($body)) then "POST" else "GET"
+            let $method := if (exists($body)) then $method-if-payload else "GET"
             let $request :=
         		<http:request method="{$method}" href="{$adsabs:API_ROOT}{$query-url}">
         			<http:header name="Authorization" value="Bearer:{$adsabs:token}"/>
@@ -81,13 +95,13 @@ declare function adsabs:query( $query-url as xs:string, $query-payload as xs:str
         	            if ($response-head/@status = ("200","404"))
         	            then
         	                let $json := util:binary-to-string($response-body)
-        	                let $cache := if($use-cache) then cache:put($adsabs:expirable-cache-name, $key, $json) else ()
+        	                let $cache := cache:put($adsabs:expirable-cache-name, $key, $json) (: always cache last result :)
                             return $json
         	            else
         	                (util:log("error",replace(serialize($request), $adsabs:token, "XXXXXXXX")),
         	                util:log("error",serialize($response-head)),
 (:        	                util:log("error", "token is " || $adsabs:token),:)
-        	                fn:error(xs:QName("adsabs:bad-request-1"), $response-head))
+        	                fn:error(xs:QName("adsabs:bad-request-1"), $response-head/@status ||":"|| $response-head/@message))
         else
             (
                 util:log("error", "please run cache:put('"||$adsabs:cache-name||"', '" || $adsabs:token-cache-name || "', 'XXXX')"),
@@ -95,31 +109,73 @@ declare function adsabs:query( $query-url as xs:string, $query-payload as xs:str
             )
 };
 
-declare function adsabs:cache-records($records as node()*){
+
+
+(:declare %private function adsabs:cache-citations($bibcode as xs:string, $citations as xs:string*):)
+(:{:)
+(:    let $citations-root := collection("/ads")//citations:)
+(:    let $citation-root := if( exists($citations-root/citation[@bibcode=$bibcode]) ) then () else update insert <citation bibcode="{$bibcode}"/> into $citations-root:)
+(:    let $citation-root := $citations-root/citation[@bibcode=$bibcode]:)
+(:    :)
+(:    for $citation in $citations return update insert <bibcode>{$citation}</bibcode> into $citation-root:)
+(:};:)
+
+(:~ 
+ : Get refereed ads citations for the given bibcodes using cache or not. 
+ : @param $bibcodes  list of given bibcode
+ : @param $use-cache use cache or not.
+ : @return ads citations or empty sequence as node()*
+ :)
+declare function adsabs:get-citations($bibcodes as xs:string*, $refereed as xs:boolean, $use-cache as xs:boolean) as xs:string*
+{
+(:    let $cached-citations := if ($use-cache) then collection("/ads")//citations/citation[@bibcode=$bibcodes] else ():)
+(:    let $bibcodes-todo := if($use-cache) then let $cached-bibcodes := $cached-citations/@bibcode/string() return $bibcodes[not(.=$cached-bibcodes)] else $bibcodes:)
+
+    (: TODO perform a load test to check limit of returned citations 2000 ? :)
+(:    let $new-citations := if ( exists($bibcodes-todo) ) then :)
+(:        for $bibcode in $bibcodes-todo:)
+        for $bibcode in $bibcodes
+        let $q := "citations(identifier:"|| $bibcode ||")" || " property:refereed"[$refereed]
+        let $search := adsabs:search($q, 'bibcode', $use-cache)
+        let $bibcodes := adsabs:ignore-bad-refereed-bibcode($search?response?docs?*?bibcode)
+(:        let $store-in-cache := if ($use-cache and exists($bibcodes)) then adsabs:cache-citations($bibcode, $bibcodes) else () (: we miss here to update new old citations if use-cache is false, should we enhance code ?:):)
+        return 
+            $bibcodes
+(:        else :)
+(:            ():)
+(:    return:)
+(:        ($new-citations,$cached-citations/bibcode) :)
+};
+
+declare function adsabs:get-refereed-citations($bibcodes as xs:string*) as xs:string*
+{
+    adsabs:get-citations($bibcodes, true(), true())
+};
+
+
+declare %private function adsabs:cache-records($records as node()*){
     for $record in $records
         let $resource-name := $record/ads:bibcode || ".xml"
         let $new-doc-path := xmldb:store($adsabs:collection-uri, $resource-name, $record)
-        let $fix-perms := sm:chown($new-doc-path, 'guest')
+        let $fix-perms := try { sm:chown($new-doc-path, 'guest') } catch * {()} 
         let $log := util:log("info", "cache "|| $resource-name)
-        return 
+        return
             ()
 };
-    
+
 (:~ 
  : get ads record for the given bibcodes using cache or not. 
  : we could get other format than refabsxml https://github.com/adsabs/adsabs-dev-api/blob/master/Export_API.ipynb
  : but this one contains most informations
  : @param $bibcodes  list of given bibcode
  : @param $use-cache use cache or not.
- : @return an ads record or empty sequence as node()*
+ : @return ads records or empty sequence as node()*
  :)
 declare function adsabs:get-records($bibcodes as xs:string*, $use-cache as xs:boolean)
 {
     let $cached-records := if ($use-cache) then collection($adsabs:collection-uri)//ads:record[ads:bibcode=$bibcodes] else ()
-    
-    let $bibcodes-todo := $bibcodes[not($use-cache) or not(.=$cached-records/ads:bibcode)]
-(:    let $bibcodes-todo := $bibcodes[not(.=$cached-records/ads:bibcode)]:)
-    
+    let $bibcodes-todo := if($use-cache) then let $cached-bibcodes := $cached-records/ads:bibcode/string() return $bibcodes[not(.=$cached-bibcodes)] else $bibcodes
+
     (: TODO perform a load test to check limit of returned records 2000 ? :)
     let $new-records := if ( exists($bibcodes-todo) ) then 
         let $quoted-bibcodes-todo := for $b in $bibcodes-todo return "&quot;"||$b||"&quot;"
@@ -131,7 +187,7 @@ declare function adsabs:get-records($bibcodes as xs:string*, $use-cache as xs:bo
         else 
             ()
     
-    let $store-in-cache := if ($use-cache) then adsabs:cache-records($new-records) else ()
+    let $store-in-cache := if ($use-cache) then adsabs:cache-records($new-records) else () (: we miss here to update new old records if use-cache is false, should we enhance code ?:)
     
     let $bibcodes-not-done := $bibcodes-todo[not(.=$new-records/ads:bibcode)]
     let $bibcodes-not-requested := $new-records/ads:bibcode[not(.=$bibcodes-todo)]
@@ -159,7 +215,12 @@ declare function adsabs:get-records($bibcodes as xs:string*)
 
 declare function adsabs:get-libraries()
 {
-    adsabs:query("/biblib/libraries", (), false())
+    adsabs:get-libraries(true())
+};
+
+declare function adsabs:get-libraries($use-cache as xs:boolean)
+{
+    parse-json(adsabs:query("/biblib/libraries", (), $use-cache))
 };
 
 declare function adsabs:libraries-diff($primary-id, $secondary-ids)
@@ -167,41 +228,118 @@ declare function adsabs:libraries-diff($primary-id, $secondary-ids)
     let $action := "difference"
     let $payload := '{"action":"'||$action||'" ,"libraries": [' || string-join(for $id in $secondary-ids return "&quot;"||$id||"&quot;", ", ") || "]}"
     return
-        adsabs:query("/biblib/libraries/operations/"||$primary-id, $payload, false())
+        parse-json(adsabs:query("/biblib/libraries/operations/"||$primary-id, $payload, false()))
 };
 
 
-declare function adsabs:library($id)
+declare function adsabs:library($name-or-id)
 {
-    adsabs:query("/biblib/libraries/"||$id, (), false())
+    adsabs:library($name-or-id, true())
 };
 
-declare function adsabs:library-add($id, $bibcodes){
-  adsabs:library-add-or-remove($id, $bibcodes, "add") 
+declare function adsabs:library($name-or-id, $use-cache as xs:boolean)
+{
+    let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
+    return parse-json(adsabs:query("/biblib/libraries/"||$id, (), $use-cache))
 };
 
-declare function adsabs:library-remove($id, $bibcodes){
-  adsabs:library-add-or-remove($id, $bibcodes, "remove")  
+declare function adsabs:library-get-permissions($name-or-id)
+{
+    adsabs:library-get-permissions($name-or-id, true())
 };
 
-declare %private function adsabs:library-add-or-remove($id, $bibcodes, $action){
+declare function adsabs:library-get-permissions($name-or-id, $use-cache as xs:boolean)
+{
+    let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
+    return parse-json(adsabs:query("/biblib/permissions/"||$id, (), $use-cache))
+};
+
+declare function adsabs:library-get-bibcodes($name-or-id)
+{
+    adsabs:library-get-bibcodes($name-or-id, true())
+};
+
+declare function adsabs:library-get-bibcodes($name-or-id, $use-cache as xs:boolean)
+{
+    data(adsabs:search(adsabs:library-get-search-expr($name-or-id), "bibcode", $use-cache)?response?docs?*?bibcode)
+};
+
+declare function adsabs:library-get-search-expr($name-or-id)
+{
+    let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
+    return "docs(library/"||$id||")"
+};
+
+
+
+declare function adsabs:create-library($name as xs:string, $description  as xs:string, $public as xs:boolean, $bibcodes as xs:string*){
+    let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
+    let $payload := '{"name":"'||$name||'" ,"description":"'||$description||'" ,"public":'||$public||' ,"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
+    return 
+        parse-json(adsabs:query("/biblib/libraries", $payload, false()))
+};
+
+declare function adsabs:update-library($id as xs:string, $name as xs:string?, $description  as xs:string?, $public as xs:boolean?){
+    let $payload := '{'||string-join(
+        ( ('"name":"'||$name||'"')[exists($name)], ('"description":"'||$description||'"')[exists($description)] , ('"public":'||$public)[exists($public)] )
+        ,", ")||'}'
+    return 
+        parse-json(adsabs:query-update("/biblib/documents/"||$id, $payload, false()))
+};
+(: add -X DELETE equ. for delete-library($id) :)
+
+declare function adsabs:library-add($name-or-id, $bibcodes){
+  
+  adsabs:library-add-or-remove($name-or-id, $bibcodes, "add")
+};
+
+declare function adsabs:library-remove($name-or-id, $bibcodes){
+  adsabs:library-add-or-remove($name-or-id, $bibcodes, "remove")  
+};
+
+declare %private function adsabs:library-add-or-remove($name-or-id, $bibcodes, $action){
     let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
     let $payload := '{"action":"'||$action||'" ,"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
+    let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
     return 
-        adsabs:query("/biblib/documents/"||$id, $payload, false())  
+        parse-json(adsabs:query("/biblib/documents/"||$id, $payload, false()))
 };
 
 
+(: Search without using cache :)
 declare function adsabs:search($query as xs:string, $fl as xs:string?)
 {
-    adsabs:query("/search/query?q="||encode-for-uri($query)
-    ||string-join(("",$fl),"&amp;fl=") 
-    ||"&amp;rows=2000"
-    , ())
+    adsabs:search($query, $fl, true())
 };
+
+declare function adsabs:search($query as xs:string, $fl as xs:string?, $use-cache as xs:boolean)
+{
+    parse-json(
+        adsabs:query("/search/query?q="||encode-for-uri($query)
+    ||string-join(("",for $f in $fl return encode-for-uri($f)),"&amp;fl=") 
+    ||"&amp;rows=2000"
+    , (), $use-cache)
+    )
+};
+
 
 
 (: --- GETTER functions :)
+
+declare %private function adsabs:ignore-bad-refereed-bibcode($bibcodes as xs:string*) {
+    $bibcodes[not( substring(., 5, 4)=$adsabs:filtered-journals)]
+};
+
+(:~ 
+ : Indicates a refereed paper.
+ : Some journals are flaged as non refereed.
+ : @param $record input ads record 
+ : @return true if refereed, false else
+ :)
+declare function adsabs:is-refereed($record as node()) as xs:boolean
+{
+  $record/@article="true" and exists( adsabs:ignore-bad-refereed-bibcode($record/ads:bibcode) )
+};
 
 (:~ 
  : Compute the publication date from a given ADS record.
@@ -303,6 +441,19 @@ declare function adsabs:get-link($bibcode as xs:string, $label as item()*) as no
 {
     let $url := $adsabs:ABS_ROOT||encode-for-uri($bibcode)||"/abstract"
     return <a href="{$url}">{if(exists($label)) then $label else $bibcode}</a>
+};
+
+(:~
+ : Get the query link.
+ : 
+ : @param $query query
+ : @param $label optionnal link text else use query value 
+ : @return the html link onto the ADS abstract service
+ :)
+declare function adsabs:get-query-link($query as xs:string, $label as item()*) as node()
+{
+    let $url := $adsabs:SEARCH_ROOT||"q="||encode-for-uri($query)
+    return <a href="{$url}">{if(exists($label)) then $label else $query}</a>
 };
 
 (:~
