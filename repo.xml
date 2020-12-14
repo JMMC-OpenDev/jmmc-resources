@@ -11,6 +11,12 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.31">
+            <ul xmlns=""> 
+                <li>adsabs: improve API.</li>
+                <li>New module tap: query TAP synchronously easily.</li>
+            </ul>
+        </change>
         <change version="0.30">
             <ul xmlns=""> 
                 <li>adsabs: change ads namespace according related to issue fix on ADS side.</li>
