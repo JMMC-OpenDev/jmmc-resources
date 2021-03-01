@@ -431,6 +431,19 @@ declare function adsabs:get-bibcode($record as element()) as xs:string
 };
 
 (:~
+ : Get the doi from a given ADS record if any.
+ : 
+ : @param $record input ADS record
+ : @return the associated DOI
+ :)
+declare function adsabs:get-doi($record as element()) as xs:string?
+{
+    $record/ads:DOI   
+};
+
+
+
+(:~
  : Get the astract link for a given bibcode.
  : 
  : @param $bibcode bibcode
