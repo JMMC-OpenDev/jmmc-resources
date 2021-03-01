@@ -69,3 +69,49 @@ declare function jmmc-tap:tap-clear-cache() {
     for $cache-name in $to-clean return cache:clear($cache-name)
 };
 
+declare function jmmc-tap:get-db-colname( $vot-field ) 
+{
+    let $field-name := $vot-field/@name
+    (: TODO  mimic better stilts conversion see : https://github.com/Starlink/starjava/blob/master/table/src/main/uk/ac/starlink/table/jdbc/JDBCFormatter.java :)
+    let $name := lower-case($field-name) ! translate(., "()-", "___") 
+    return if($name="publication") then $name||"_" else $name
+};
+
+declare function jmmc-tap:get-db-datatype($vot-field)
+{
+    let $datatype := $vot-field/@datatype
+    return 
+        switch ($datatype)
+            case "char" case "unicodeChar"return "VARCHAR"
+            default return $datatype
+};
+
+declare function jmmc-tap:votable2schema($vot, $table-name as xs:string, $table-desc as xs:string) 
+{ 
+    (: TODO:
+        - check for all version of ucds ... to get at least one ?
+        - assume that some column are 
+        - add support for V1_1 https://www.ivoa.net/documents/TAP/20180830/PR-TAP-1.1-20180830.html#tth_sEc4.3
+        - support all datatype : boolean bit unsignedByte short int long char unicodeChar float double floatComplex doubleComplex
+          - using timestamp when MJD declared in votable ?
+        
+    :)
+    let $i := "INSERT INTO &quot;TAP_SCHEMA&quot;.&quot;tables&quot; VALUES ('public', 'spica', 'table', 'SPICA-DB test', NULL);"
+    
+    let $insert := 'INSERT INTO "TAP_SCHEMA"."columns" ("table_name", "column_name", "description", "unit", "ucd", "utype", "datatype", "size", "principal", "indexed", "std") VALUES '
+    let $values := 
+        for $f in $vot//*:FIELD
+            let $colname := jmmc-tap:get-db-colname($f)
+            let $desc := $f/*:DESCRIPTION||""
+            let $unit := $f/@unit||""
+            let $ucd := $f/@ucd||"" 
+            let $utype := $f/@utype||""
+            let $datatype := jmmc-tap:get-db-datatype($f)
+            let $size := -1
+            
+            let $v := ($table-name, $colname, $desc, $unit, $ucd, $utype, $datatype, $size, 0,0,0) ! concat("&apos;", ., "&apos;")
+        return 
+            "(" || string-join($v, ", ") || ")"
+        
+    return string-join(($i, $insert, string-join($values, ",&#10;")), "&#10;")
+};
