@@ -21,7 +21,7 @@ import module namespace test="http://exist-db.org/xquery/xqsuite" at "resource:o
 declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts"; 
 
 (: define ads cache collection path to store documents :)
-declare variable $adsabs:collection-uri := "/ads/records/";
+declare variable $adsabs:collection-uri := "/db/ads/records/";
 (: TODO add reset function for dba ?
  :  let $collection-uri := "/db/ads/records"
  :  for $resource in xmldb:get-child-resources($collection-uri) return xmldb:remove($collection-uri, $resource)
@@ -43,7 +43,7 @@ declare variable $adsabs:token-check := if ( exists($adsabs:token)) then () else
 (: use a cache for repeated querys :)
 declare variable $adsabs:expirable-cache-name := $adsabs:cache-name || "-queries";
 (: cache:clear or cache:remove can be asked on demand on updates, else cache get expirarion delay :)
-declare variable $adsabs:expirable-cache := cache:create($adsabs:expirable-cache-name,map { "expireAfterAccess": 36000000 }); (: 10h :)
+declare variable $adsabs:expirable-cache := cache:create($adsabs:expirable-cache-name,map { "expireAfterAccess": 3600000 }); (: 1h :)
 
 
 (: store server url :)
@@ -198,7 +198,7 @@ declare function adsabs:get-records($bibcodes as xs:string*, $use-cache as xs:bo
 };
 
 (:~ 
- : get ads record for the given bibconong cache. 
+ : Get ads record for the given bibcode cache (no-cache). 
  : @param $bibcodes  list of given bibcode
  : @return an ads record or empty sequence as node()*
  :)
@@ -207,7 +207,16 @@ declare function adsabs:get-records-no-cache($bibcodes as xs:string*)
     adsabs:get-records($bibcodes, false())
 };
 
-declare function adsabs:get-records($bibcodes as xs:string*)
+(:~
+ : Get ads record for the given bibcode cache. 
+ : @param $bibcodes  list of given bibcode
+ : @return ads records or empty sequence as node()*
+ :)
+declare
+    %rest:GET
+    %rest:path("/adsabs")
+    %rest:query-param("bibcodes", "{$bibcodes}")
+function adsabs:get-records($bibcodes as xs:string*)
 {
     adsabs:get-records($bibcodes, true())
 };
@@ -466,6 +475,21 @@ declare function adsabs:get-link($bibcode as xs:string, $label as item()*) as no
 declare function adsabs:get-query-link($query as xs:string, $label as item()*) as node()
 {
     let $url := $adsabs:SEARCH_ROOT||"q="||encode-for-uri($query)
+    return <a href="{$url}">{if(exists($label)) then $label else $query}</a>
+};
+
+(:~
+ : Get the query link.
+ : 
+ : @param $query query
+ : @param $label optionnal link text else use query value 
+ : @param $params optionnal params to give to the query. values must be encoded for uri ("param1=value1", "param2=value2")
+ : @return the html link onto the ADS abstract service
+ :)
+declare function adsabs:get-query-link($query as xs:string, $label as item()*, $params as xs:string*) as node()
+{
+    let $q:="q="||encode-for-uri($query)
+    let $url := $adsabs:SEARCH_ROOT||string-join(($q, $params), "&amp;")
     return <a href="{$url}">{if(exists($label)) then $label else $query}</a>
 };
 
