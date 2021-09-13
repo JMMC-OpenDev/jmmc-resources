@@ -107,7 +107,7 @@ declare function jmmc-tap:tap-clear-cache() {
 
 declare function jmmc-tap:get-db-colname( $vot-field ) 
 {
-    let $field-name := ( $vot-field/@name, $vot-field )[1] (: search in votable field or use str param :)
+    let $field-name := try{ ($vot-field/@name, $vot-field)[1] }catch*{ $vot-field } (: search in votable field or use str param :)
     (: TODO  mimic better stilts conversion see : https://github.com/Starlink/starjava/blob/master/table/src/main/uk/ac/starlink/table/jdbc/JDBCFormatter.java :)
     let $name := lower-case($field-name) ! translate(., "()-", "___") 
     return if($name="publication") then $name||"_" else $name
@@ -169,7 +169,8 @@ declare
             [ DEFERRABLE | NOT DEFERRABLE ] [ INITIALLY DEFERRED | INITIALLY IMMEDIATE ]
           
     :)
-    let $table-name := if($table-name) then $table-name else $vot//*:TABLE/@name
+    
+    let $table-name := if(exists($table-name)) then $table-name else $vot//*:TABLE/@name
     let $table-name := jmmc-tap:get-db-colname($table-name) (: normalize table name like a colname :)
     
     let $comments:= ("")
@@ -182,7 +183,7 @@ declare
         for $f in $vot//*:FIELD
             let $colname := jmmc-tap:get-db-colname($f)
             let $datatype := jmmc-tap:get-db-datatype($f)
-            let $col-constraint := if($primary-key-name = $colname) then "PRIMARY KEY" else ()
+            let $col-constraint := if($primary-key-name = $colname) then " SERIAL PRIMARY KEY" else ()
             return 
                 ("  ", $colname, "          ", $datatype, $col-constraint ) => string-join(" ")
     
