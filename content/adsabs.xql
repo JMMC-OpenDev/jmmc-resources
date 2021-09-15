@@ -245,6 +245,13 @@ declare function adsabs:library($name-or-id)
 {
     adsabs:library($name-or-id, true())
 };
+declare function adsabs:library-id($name){
+    adsabs:get-libraries()?libraries?*[?public=true() and ?name[.=$name] ]?id
+};
+
+declare function adsabs:library-query($name){
+    "docs(library/"||adsabs:library-id($name)||")"
+};
 
 declare function adsabs:library($name-or-id, $use-cache as xs:boolean)
 {
