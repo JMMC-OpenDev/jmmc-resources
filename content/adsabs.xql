@@ -245,18 +245,17 @@ declare function adsabs:library($name-or-id)
 {
     adsabs:library($name-or-id, true())
 };
+declare function adsabs:library($name-or-id, $use-cache as xs:boolean)
+{
+    let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
+    return parse-json(adsabs:query("/biblib/libraries/"||$id, (), $use-cache))
+};
 declare function adsabs:library-id($name){
     adsabs:get-libraries()?libraries?*[?public=true() and ?name[.=$name] ]?id
 };
 
 declare function adsabs:library-query($name){
     "docs(library/"||adsabs:library-id($name)||")"
-};
-
-declare function adsabs:library($name-or-id, $use-cache as xs:boolean)
-{
-    let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
-    return parse-json(adsabs:query("/biblib/libraries/"||$id, (), $use-cache))
 };
 
 declare function adsabs:library-get-permissions($name-or-id)
@@ -321,6 +320,9 @@ declare %private function adsabs:library-add-or-remove($name-or-id, $bibcodes, $
         parse-json(adsabs:query("/biblib/documents/"||$id, $payload, false()))
 };
 
+declare function adsabs:search-bibcodes($query) as xs:string*{ 
+    adsabs:search($query, "bibcode")?response?docs?*?bibcode
+};
 
 (: Search without using cache :)
 declare function adsabs:search($query as xs:string, $fl as xs:string?)
@@ -358,6 +360,16 @@ declare function adsabs:is-refereed($record as node()) as xs:boolean
 };
 
 (:~ 
+ : Compute the publication year date from a given ADS record.
+ : @param $record input ads record 
+ : @return the publication date
+ :)
+declare function adsabs:get-pub-year($record as node()) as xs:integer
+{
+     year-from-date(adsabs:get-pub-date($record))
+(:  substring($record/ads:pubdate,1,4):)
+};
+(:~ 
  : Compute the publication date from a given ADS record.
  : @param $record input ads record 
  : @return the publication date
@@ -382,15 +394,24 @@ declare function adsabs:format-pub-date($pubdate as xs:string) as xs:date
 
 
 (:~ 
- : Get first author of given ads record
+ : Get the abstract of given ads record
  : @param $record input ads record 
- : @return first author
+ : @return abstract of publication or empty sequence
  :)
-declare function adsabs:get-first-author($record as element()) as xs:string
+declare function adsabs:get-abstract($record as element()) as xs:string?
 {
-    adsabs:get-authors($record)[1]
+    $record/ads:abstract
 };
 
+(:~ 
+ : Get type of given ads record
+ : @param $record input ads record 
+ : @return type of publication
+ :)
+declare function adsabs:get-type($record as element()) as xs:string
+{
+    $record/@type/text()
+};
 
 (:~ 
  : Get keywords of given ads record
@@ -400,6 +421,15 @@ declare function adsabs:get-first-author($record as element()) as xs:string
 declare function adsabs:get-keywords($record as element()) as xs:string*
 {
     $record//ads:keyword/text()
+};
+(:~ 
+ : Get first author of given ads record
+ : @param $record input ads record 
+ : @return first author
+ :)
+declare function adsabs:get-first-author($record as element()) as xs:string
+{
+    adsabs:get-authors($record)[1]
 };
 
 (:~
@@ -433,6 +463,27 @@ declare function adsabs:get-title($record as element()) as xs:string
 declare function adsabs:get-journal($record as element()) as xs:string
 {
     $record/ads:journal
+};
+(:~
+ : Get the volume information from an ADS record.
+ : 
+ : @param $record input ADS record
+ : @return the associated volume or empty sequence
+ :)
+declare function adsabs:get-volume($record as element()) as xs:string?
+{
+    $record/ads:volume
+};
+
+(:~
+ : Get the pages information from an ADS record.
+ : 
+ : @param $record input ADS record
+ : @return the associated pages
+ :)
+declare function adsabs:get-pages($record as element()) as xs:string
+{
+    string-join( ( $record/ads:page, $record/ads:lastpage ), "-" )
 };
 
 (:~
@@ -526,6 +577,32 @@ declare function adsabs:get-html($records as element()*, $max-authors as xs:inte
                 {$authors-str}<br/><b>{$year}</b> - <i>{$journal}</i>
             </span>
             
+};
+
+
+declare function adsabs:get-bibtex($records as element()*){
+    let $bibrecs := 
+        for $r in $records
+            let $pubid :=  $r/ads:bibcode
+            let $type := "@" || upper-case($r/@type)
+            let $attributes := map{
+                "title" : $r/ads:title,
+                "authors" : string-join(adsabs:get-authors($r),"&#10;and "),
+                "journal" : adsabs:get-journal($r),
+                "abstract": adsabs:get-abstract($r),
+                "volume"  : adsabs:get-volume($r),
+                "pages"   : adsabs:get-pages($r),
+                "year"    : adsabs:get-pub-year($r),
+                "doi"     : adsabs:get-doi($r),
+                "optnode" : $pubid || " 7ici"
+            }
+            return
+                string-join(
+                    ( $type||'{'||$pubid, map:for-each( $attributes, function($k,$v){if($v) then upper-case($k)|| " = {" || $v ||"}" else () } ), '}'),
+                    ",&#10;"
+                    )
+(:        $volume,$pages,,:)
+    return string-join($bibrecs, "&#10;&#10;")
 };
 
 declare
