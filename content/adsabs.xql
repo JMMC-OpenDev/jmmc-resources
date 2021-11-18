@@ -28,7 +28,7 @@ declare variable $adsabs:collection-uri := "/db/ads/records/";
 :)
 
 (: consider some journal as non refereed even marked as refereed on ADS side :)
-declare variable $adsabs:filtered-journals := ("SPIE", "ASPC", "PhDT", "arXiv");
+declare variable $adsabs:filtered-journals := ("SPIE", "ASPC", "PhDT", "arXiv", "MNRAS.tmp");
 
 
 
