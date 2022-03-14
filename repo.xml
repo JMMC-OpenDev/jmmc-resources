@@ -14,6 +14,7 @@
         <change version="0.34">
             <ul xmlns=""> 
                 <li>jmmc-tap: fix Simbad and add GAVO tap sync endpoints.</li>
+                <li>technical: make it eXistDB6 compatible</li>
             </ul>
         </change>
         <change version="0.33">
