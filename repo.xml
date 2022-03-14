@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.34">
+            <ul xmlns=""> 
+                <li>jmmc-tap: fix Simbad and add GAVO tap sync endpoints.</li>
+            </ul>
+        </change>
         <change version="0.33">
             <ul xmlns=""> 
                 <li>adsabs: add get-bibtex, get-volume, get-pages functions.</li>

@@ -11,7 +11,8 @@ declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.3";
 declare namespace http="http://expath.org/ns/http-client";
 
 (: Some TAP endpoints :)
-declare variable $jmmc-tap:SIMBAD-SYNC := "http://tap.u-strasbg.fr/tap/sim-tap/sync";
+declare variable $jmmc-tap:SIMBAD-SYNC := "http://simbad.u-strasbg.fr/simbad/sim-tap/sync";
+declare variable $jmmc-tap:GAVO-SYNC := "https://dc.zah.uni-heidelberg.de/tap/sync";
 declare variable $jmmc-tap:OIDB-SYNC := "http://oidb.jmmc.fr/tap/sync";
 
 (: Value of current votable namespace :)
