@@ -22,7 +22,7 @@ declare function jmmc-web:navbar-li($node as node(), $model as map(*)) as node()
  else
   <li >
     <a href="//www.jmmc.fr">
-        <img alt="logo" height="30" src="//www.jmmc.fr/images/jmmc_large.jpg"/>
+        <img alt="logo" height="30" src="//www.jmmc.fr/sites/jmmc.fr/IMG/siteon0.png"/>
     </a>
   </li>
 
@@ -49,7 +49,7 @@ let $lis:= for $l1 in $div/xhtml:li let $a := $l1/xhtml:a let $href := if(contai
         </li>
         
 let $ret := <li class="dropdown">
-    <a href="#" class="dropdown-toggle" style="padding:12px;" data-toggle="dropdown"><img height="30" src="//apps.jmmc.fr/images/jmmc_large.jpg"/>&#160;<span class="caret"></span></a>
+    <a href="#" class="dropdown-toggle" style="padding:12px;" data-toggle="dropdown"><img height="30" src="//www.jmmc.fr/sites/jmmc.fr/IMG/siteon0.png"/>&#160;<span class="caret"></span></a>
     <ul class="dropdown-menu">        
     {$lis}
     </ul>
