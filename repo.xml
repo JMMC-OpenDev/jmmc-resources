@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.35">
+            <ul xmlns=""> 
+                <li>jmmc-web: fix JMMC's logo url.</li>
+            </ul>
+        </change>
         <change version="0.34">
             <ul xmlns=""> 
                 <li>jmmc-tap: fix Simbad and add GAVO tap sync endpoints.</li>
