@@ -1,7 +1,7 @@
 xquery version "3.0";
 
 (:~
- : This modules contains common elements to synchronize content with the main JMMC web site.
+ : This modules contains common elements to synchronize content with the main JMMC web site or provide util functions web related.
  :)
 module namespace jmmc-web="http://exist.jmmc.fr/jmmc-resources/web";
 
@@ -56,5 +56,43 @@ let $ret := <li class="dropdown">
     </li>
 let $store := xmldb:store($jmmc-web:menu-col-path, $jmmc-web:menu-doc-name, $ret)
 return $ret
+};
+
+(:~
+ : Provide a javascript encoded array to fill an html attribute that can display an email after client side decoding.
+ : TODO move into jmmc-auth
+ :)
+declare function jmmc-web:get-encoded-email-array($email as xs:string) as xs:string
+{
+  let $pre := substring-before($email,"@")
+  let $pre := translate($pre, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm")
+
+  let $post := substring-after($email,"@")
+  let $post := translate($post, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm")
+  let $post := tokenize( $post , "\.")
+  let $post := reverse( $post )
+  let $mailto := translate("mailto:", "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm")
+  let $mailto := $mailto ! string-to-codepoints(.) ! codepoints-to-string(.)
+
+  return "[[&apos;"||string-join($mailto, "&apos;, &apos;")||"&apos;],[&apos;"||$pre||"&apos;],[&apos;"||string-join($post, "&apos;, &apos;")|| "&apos;]]"
+};
+
+(:~
+ : Provide a javascript decoder code.
+ : TODO move into jmmc-auth
+ :)
+declare function jmmc-web:get-encoded-email-decoder() as xs:string {
+    <script>
+    <![CDATA[
+    // connect the contact links
+    $('a[data-contarr]').on('click', function (e){
+        var array = eval($(this).data('contarr'))
+        var str = array[0].join('')+array[1]+'@'+array[2].reverse().join('.');
+        location.href=str.rot13();
+        return false;
+    });
+    ]]>
+    </script>
+
 };
 
