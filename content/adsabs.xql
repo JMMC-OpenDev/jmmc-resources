@@ -100,6 +100,7 @@ declare function adsabs:query( $query-url as xs:string, $query-payload as xs:str
         	            else
         	                (util:log("error",replace(serialize($request), $adsabs:token, "XXXXXXXX")),
         	                util:log("error",serialize($response-head)),
+        	                util:log("error",serialize($response-body)),
 (:        	                util:log("error", "token is " || $adsabs:token),:)
         	                fn:error(xs:QName("adsabs:bad-request-1"), $response-head/@status ||":"|| $response-head/@message))
         else
@@ -290,6 +291,7 @@ declare function adsabs:library-get-search-expr($name-or-id)
 declare function adsabs:create-library($name as xs:string, $description  as xs:string, $public as xs:boolean, $bibcodes as xs:string*){
     let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
     let $payload := '{"name":"'||$name||'" ,"description":"'||$description||'" ,"public":'||$public||' ,"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
+    let $log := util:log("info", "creating library "|| $name)
     return 
         parse-json(adsabs:query("/biblib/libraries", $payload, false()))
 };
@@ -311,6 +313,14 @@ declare function adsabs:library-add($name-or-id, $bibcodes){
 declare function adsabs:library-remove($name-or-id, $bibcodes){
   adsabs:library-add-or-remove($name-or-id, $bibcodes, "remove")  
 };
+
+declare function adsabs:library-clear($name-or-id){
+    (: todo : try to mimic empty action   :)
+    let $bibcodes := adsabs:library-get-bibcodes($name-or-id)
+    return 
+        adsabs:library-add-or-remove($name-or-id, $bibcodes, "remove")  
+};
+
 
 declare %private function adsabs:library-add-or-remove($name-or-id, $bibcodes, $action){
     let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
@@ -532,8 +542,7 @@ declare function adsabs:get-link($bibcode as xs:string, $label as item()*) as no
  :)
 declare function adsabs:get-query-link($query as xs:string, $label as item()*) as node()
 {
-    let $url := $adsabs:SEARCH_ROOT||"q="||encode-for-uri($query)
-    return <a href="{$url}">{if(exists($label)) then $label else $query}</a>
+    adsabs:get-query-link($query, $label, ())
 };
 
 (:~
@@ -548,7 +557,7 @@ declare function adsabs:get-query-link($query as xs:string, $label as item()*, $
 {
     let $q:="q="||encode-for-uri($query)
     let $url := $adsabs:SEARCH_ROOT||string-join(($q, $params), "&amp;")
-    return <a href="{$url}">{if(exists($label)) then $label else $query}</a>
+    return <a target="_blank" href="{$url}">{if(exists($label)) then $label else $query}</a>
 };
 
 (:~
@@ -621,4 +630,5 @@ function adsabs:test-module( ) {
             string-join((adsabs:get-title($rec),adsabs:get-journal($rec),adsabs:get-first-author($rec)),"   |")[$debug]
         )
 };
+
 
