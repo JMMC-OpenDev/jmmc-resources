@@ -208,3 +208,32 @@ declare function jmmc-dateutil:durationInPast($dateTime as xs:dateTime)
         <a href="#" title="{ $dateTime }">{ $durationInPast }</a>
 };
 
+
+(:~
+ : Compute abreviation of elasped time.
+ :)
+declare function jmmc-dateutil:duration($from as xs:time)
+{
+    jmmc-dateutil:duration($from, util:system-time() , ())
+};
+
+(:~
+ : Compute abreviation of elasped time.
+ :)
+declare function jmmc-dateutil:duration($from as xs:time, $label)
+{
+    jmmc-dateutil:duration($from, util:system-time() , $label)
+};
+
+
+(:~
+ : Compute abreviation of elasped time.
+ :)
+declare function jmmc-dateutil:duration($from as xs:time, $to as xs:time, $label)
+{
+    let $duration := $to - $from
+    return
+        <a href="#" title="from { $from } to {$to} : {$duration}">{if(exists($label)) then ($label, "&#160;") else ()} { seconds-from-duration($duration) }s</a>
+};
+
+
