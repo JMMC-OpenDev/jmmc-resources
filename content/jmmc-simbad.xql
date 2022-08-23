@@ -118,7 +118,7 @@ declare function jmmc-simbad:resolve-by-name($identifier as xs:string) as item()
 declare function jmmc-simbad:resolve-by-name($identifier as xs:string, $ra as xs:double?, $dec as xs:double?) as item()* {
     let $do-dist := ($ra and $dec)
     let $query := 
-        "SELECT oid AS id, ra, dec, main_id AS name" || (if($do-dist) then ", DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist " else " ") ||
+        "SELECT oid AS id, ra, dec, main_id AS name, pmra, pmdec " || (if($do-dist) then ", DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist " else " ") ||
         "FROM basic JOIN ident ON oidref=oid " ||
         "WHERE id = '" || jmmc-simbad:escape($identifier) || "' " ||
         (if($do-dist) then "ORDER BY dist" else "")
@@ -136,7 +136,7 @@ declare function jmmc-simbad:resolve-by-name($identifier as xs:string, $ra as xs
  :)
 declare function jmmc-simbad:resolve-by-coords($ra as xs:double, $dec as xs:double, $radius as xs:double) as item()* {
     jmmc-simbad:resolve(
-        "SELECT oid AS id, ra, dec, main_id AS name, DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist " ||
+        "SELECT oid AS id, ra, dec, main_id AS name, DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist , pmra, pmdec" ||
         "FROM basic " ||
         "WHERE CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', " || $ra || ", " || $dec || ",  " || $radius || " )) = 1 " ||
         "ORDER BY dist")
