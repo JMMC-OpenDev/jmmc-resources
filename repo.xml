@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.37">
+            <ul xmlns=""> 
+                <li>jmmc-simbad: retrieve pmra and pmdec resolving names or positions.</li>
+            </ul>
+        </change>
         <change version="0.36">
             <ul xmlns=""> 
                 <li>jmmc-web: add get-encoded-email-array($email) and get-encoded-email-decoder().</li>
