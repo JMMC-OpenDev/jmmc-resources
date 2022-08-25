@@ -39,11 +39,7 @@ declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as 
     }
     let $response-status := $response[1]/@status 
     
-    return if ($response-status != 200) then
-        error(xs:QName('jmmc-tap:TAP'), 'Failed to retrieve data (HTTP_STATUS='|| $response-status ||', query='||$query||')', $query) 
-    else if (count($response[1]/http:body) != 1) then
-        error(xs:QName('jmmc-tap:TAP'), 'Bad content returned')
-    else
+    return if ($response-status = (200,400)) then (: some implementations do return a 400 error code but a votable in case of error :)
         let $body := $response[2]
         return 
             try {
@@ -55,8 +51,13 @@ declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as 
                     else
                         fn:parse-xml($body)    
             } catch * {
-                $body
+                error(xs:QName('jmmc-tap:TAP'), 'Failed to retrieve data (HTTP_STATUS='|| $response-status ||', query='||$query|| ', body='||$body|| ')', $query) 
             }
+    else if (count($response[1]/http:body) != 1) then
+        error(xs:QName('jmmc-tap:TAP'), 'Bad content returned')
+    else
+        error(xs:QName('jmmc-tap:TAP'), 'Failed to retrieve data (HTTP_STATUS='|| $response-status ||', query='||$query||')', $query) 
+        
 };
 
 
@@ -312,5 +313,4 @@ declare
         
         return string-join(($d, $i, $delete, $insert, string-join($cvalues, ",&#10;"),""), "&#10;")
 };
-
 
