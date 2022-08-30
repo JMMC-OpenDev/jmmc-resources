@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.38">
+            <ul xmlns=""> 
+                <li>jmmc-tap: normalize sapces of tap queries (this helped to fix a nasty bug querying Simbad-tap).</li>
+            </ul>
+        </change>
         <change version="0.37">
             <ul xmlns=""> 
                 <li>jmmc-simbad: retrieve pmra and pmdec resolving names or positions.</li>

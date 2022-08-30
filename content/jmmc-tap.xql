@@ -29,7 +29,7 @@ declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as 
         'LANG=ADQL',
         'FORMAT='||( if( $format) then $format else 'votable/td' ) , (: votable/td replaces in vollt old votable of taplib :) 
         'MAXREC=' || ( if ($maxrec) then  $maxrec else '-1' ),
-        'QUERY=' || encode-for-uri($query)), '&amp;')
+        'QUERY=' || encode-for-uri(normalize-space($query))), '&amp;')
     
     let $response        := try {
         http:send-request(<http:request method="GET" href="{$uri}"/>)    
