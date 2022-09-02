@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.38" spec="1.0">
+<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.39" spec="1.0">
     <title>JMMC Commons module</title>
     <dependency processor="http://exist-db.org" semver-min="5.0.0"/>
     <!-- TODO make it resurected

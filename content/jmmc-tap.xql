@@ -168,6 +168,45 @@ declare function jmmc-tap:get-db-datatype($vot-field)
 };
 
 
+declare %private function jmmc-tap:_get-table-desc( $table-name , $primary-key-name, $votable){
+  (: search param as primary key or try to search for a single meta.id;meta.main field else. Use id if nothing found :)
+    (: TODO check that id is not already present :)
+    let $primary-key-name := if($primary-key-name) then $primary-key-name
+        else
+        (: search for a single meta.id;meta.main field as fallback :)
+        let $meta_id_main_fields := $votable//*:FIELD[@ucd="meta.id;meta.main"]/@name
+(:        let $log := util:log("info", "meta ids : "||string-join($meta_id_main_fields, ", ")):)
+        return 
+            if(count($meta_id_main_fields)=1) then data($meta_id_main_fields) else ()
+            
+    let $primary-column := if ($primary-key-name) then 
+        if (exists($votable//*:FIELD[@name=$primary-key-name])) then ()
+        else 
+            <field datatype="BIGINT">{$primary-key-name}</field>
+        else <field datatype="BIGINT">id</field>
+    let $primary-key-name := if ($primary-key-name) then $primary-key-name else data($primary-column)
+
+    let $table-name := if(exists($table-name)) then $table-name else $votable//*:TABLE/@name
+    let $table-name := jmmc-tap:get-db-colname($table-name) (: normalize table name like a colname :)
+  (: only last element can be empty :)
+  return ($table-name, $primary-key-name, $primary-column)
+    
+};
+
+declare %private function jmmc-tap:get-db-row-values($tr, $trs-fields, $fields-desc){
+    string-join(
+        (
+            for $td at $pos in $tr/*:TD
+            let $datatype := $fields-desc($trs-fields[$pos]/@name)?datatype
+            return
+                switch ($datatype)
+                    case "VARCHAR" return concat("'", $td, "'")
+                    default return ($td[not(empty(.) or string-length(.)=0) and not(normalize-space(.)=("NaN"))],"NULL")[1] (: avoid empty value for insert VALUE statement :)
+        )
+        , ", "
+    )
+};
+
 
 (:~ 
  : Transform your votable to an SQL statement template so you can create a table in your rdbms.
@@ -212,32 +251,33 @@ declare
               REFERENCES reftable [ ( refcolumn ) ] [ MATCH FULL | MATCH PARTIAL | MATCH SIMPLE ]
                 [ ON DELETE action ] [ ON UPDATE action ] }
             [ DEFERRABLE | NOT DEFERRABLE ] [ INITIALLY DEFERRED | INITIALLY IMMEDIATE ]
-          
     :)
     
-    (: force a primary key if not given :)
-    (: TODO check that id is not already present :)
-    let $primary-column := if ($primary-key-name) then () else <field datatype="BIGINT">id</field>
-    let $primary-key-name := if ($primary-key-name) then $primary-key-name else data($primary-column)
-
-    
-    let $table-name := if(exists($table-name)) then $table-name else $vot//*:TABLE/@name
-    let $table-name := jmmc-tap:get-db-colname($table-name) (: normalize table name like a colname :)
+    let $table-desc := jmmc-tap:_get-table-desc($table-name, $primary-key-name, $vot)
+    let $table-name := $table-desc[1]
+    let $primary-key-name := $table-desc[2]
+    let $primary-column := $table-desc[3]
     
     let $comments:= ("")
     let $comments := ($comments, if(exists($table-name))  then "Using "||$table-name|| " as table name" else "Missing value for table-name , please add it to VOTABEL@name or as table-name query param")
-    let $comments := ($comments, if(exists($primary-key-name))  then "Using "||$primary-key-name|| " key as primary key" else "No primary key given to primary-key-name as query param")
+    let $comments := ($comments, if(exists($primary-column))  then "No primary key given as primary-key-name param, using default : "||$primary-key-name else "Using "||$primary-key-name|| " key as primary key")
     let $comments := ($comments, "","No content extracted, please use the catalog API to injest dat or ask jmmc-tech-group for such enhancement")
     let $comments := ($comments, "","Add max "|| $max|| " records to insert (use max parameter = -1 to insert all records )")
     let $sql-comments := string-join($comments , "&#10;-- ")
     
-    (: Look at columns(FIELDS) and create associated table :)
-    let $cols-create := 
-        for $f in ($primary-column, $vot//*:FIELD)
+    (: create a description map to help associated table creation and future inserts :)
+    let $fields-desc := map:merge(
+        for $f at $pos in ($primary-column, $vot//*:FIELD)
             let $colname := jmmc-tap:get-db-colname($f)
             let $datatype := if($primary-key-name = $colname) then " SERIAL PRIMARY KEY" else jmmc-tap:get-db-datatype($f)
+            return map{$f/@name : map{"colname_prefixed":$pos||"_"||$colname, "colname":$colname , "datatype" : $datatype}}
+        )
+    
+    let $cols-create := 
+        for $f in $fields-desc?*
             return 
-                ("  ", $colname, "          ", $datatype ) => string-join(" ")
+                ("  ", $f?colname, "          ", $f?datatype ) => string-join(" ")
+                
     let $table-create := string-join(( 'CREATE TABLE ' || $table-name
                     , '('
                     , string-join($cols-create, ", &#10;")
@@ -245,20 +285,20 @@ declare
                     ,""
                     ), "&#10;")|| ";"
     
-    (: Insert data looking at TRs :)
+    (: Insert data looking at TRs if some tr are found limited to max elements :)
     let $max := xs:integer($max)
     let $trs := if ($max >= 0 ) then subsequence($vot//*:TABLEDATA/*:TR,1, $max) else $vot//*:TABLEDATA/*:TR
-    let $trs-values := for $tr in $trs
-            return 
-                '( ' || string-join( $tr/*:TD ! concat("'", ., "'") , ", ") || ')'
-                
-    let $table-insert := if (exists($trs-values)) then 
-                    let $cols := $vot//*:FIELD ! jmmc-tap:get-db-colname(.) => string-join(", ")
+    let $table-insert := if (exists($trs)) then 
+                    let $trs-fields := $vot//*:FIELD
+                    let $col-names := for $tr-field in $trs-fields return $fields-desc($tr-field/@name)?colname
+                    let $trs-values := for $tr at $pos in $trs
+                            return 
+                                '( ' || jmmc-tap:get-db-row-values($tr, $trs-fields, $fields-desc) || ')'
                     return 
                         string-join(
-                            ( 'INSERT INTO "' || $table-name || '" (' || $cols ||') VALUES '
-                            , string-join($trs-values, ", &#10;")
-                            ,""
+                            ( 'INSERT INTO&#10;  "' || $table-name || '" (' || string-join($col-names, ", ") ||')&#10;VALUES&#10;  '
+                            || string-join($trs-values, ",&#10;  ")
+                            ,"&#10;"
                             ),";&#10;")
                     else
                         ()
@@ -281,14 +321,10 @@ declare
         - check for all version of ucds ... to get at least one ?
     :)
     
-    (: force a primary key if not given :)
-    (: TODO check that id is not already present :)
-    let $primary-column := if ($primary-key-name) then () else <field datatype="BIGINT">id</field> 
-    let $primary-key-name := if ($primary-key-name) then $primary-key-name else data($primary-column)
-
-    
-    let $table-name := if($table-name) then $table-name else $vot//*:TABLE/@name
-    let $table-name := jmmc-tap:get-db-colname($table-name) (: normalize table name like a colname :)
+    let $table-desc := jmmc-tap:_get-table-desc($table-name, $primary-key-name, $vot)
+    let $table-name := $table-desc[1]
+    let $primary-key-name := $table-desc[2]
+    let $primary-column := $table-desc[3]
     
     let $d := "DELETE FROM &quot;TAP_SCHEMA&quot;.&quot;tables&quot; WHERE table_name='" || $table-name || "';"
     let $i := "INSERT INTO &quot;TAP_SCHEMA&quot;.&quot;tables&quot; VALUES ('public', '"|| $table-name ||"', 'table', '"|| $table-name ||"', NULL);"
