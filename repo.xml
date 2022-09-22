@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.40">
+            <ul xmlns=""> 
+              <li>jmmc-tap: add capability to query using an uploaded table.</li>
+            </ul>
+        </change>
         <change version="0.39">
             <ul xmlns=""> 
               <li>jmmc-tap: improve rest services votable2sql and votable2schema.</li>
