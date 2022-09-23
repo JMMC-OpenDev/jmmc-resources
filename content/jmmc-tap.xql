@@ -153,7 +153,8 @@ declare function jmmc-tap:tap-adql-query($uri as xs:string, $query as xs:string,
  :)
 declare function jmmc-tap:tap-adql-query($uri as xs:string, $query as xs:string, $votable as node()?, $maxrec as xs:integer?, $format as xs:string?)  {
 let $cache-name := $jmmc-tap:cache-prefix||$uri
-let $cache-key := $query||$maxrec||$format
+let $votable-hash := if(exists($votable)) then "VOTMD5"||util:hash($votable, "md5") else ()
+let $cache-key := string-join(($votable-hash,$query,$maxrec,$format))
 let $create-cache := cache:create($cache-name, map { "maximumSize": 2048 }) (: TODO:  check that given limit is taken into account was 128 before :)
 let $cached := cache:get($cache-name, $cache-key)
     return
