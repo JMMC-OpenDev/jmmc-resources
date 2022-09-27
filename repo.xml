@@ -14,6 +14,7 @@
         <change version="0.40">
             <ul xmlns=""> 
               <li>jmmc-tap: add capability to query using an uploaded table.</li>
+              <li>jmmc-tap: improve cache management.</li>
             </ul>
         </change>
         <change version="0.39">
