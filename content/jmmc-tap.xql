@@ -56,7 +56,7 @@ declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as 
     }
     let $response-status := $response[1]/@status
 
-    return if ($response-status = (200,400)) then (: some implementations do return a 400 error code but a votable in case of error :)
+    return if ($response-status = (200,400,500)) then (: some implementations do return a 400 or 500 error code but a votable in case of error :)
         let $body := $response[2]
         return
             try {
