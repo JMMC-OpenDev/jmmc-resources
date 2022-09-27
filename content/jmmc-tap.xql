@@ -18,6 +18,7 @@ declare variable $jmmc-tap:OIDB-SYNC := "http://oidb.jmmc.fr/tap/sync";
 declare variable $jmmc-tap:vot-ns := namespace-uri(element votable:dummy {});
 
 declare variable $jmmc-tap:cache-prefix := "_jmmc-tap-cache-";
+declare variable $jmmc-tap:cache-size := 1024; (: extend default value of 128 :)
 
 
 declare function jmmc-tap:tap-adql-query-uri($uri as xs:string, $query as xs:string, $maxrec as xs:integer?, $format as xs:string?) {
@@ -50,8 +51,8 @@ declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as 
     let $response := try {
         jmmc-tap:_send-request($uri, $params, $votable)
     } catch * {
-        util:wait(200),
-        jmmc-tap:_send-request($uri, $params, $votable)
+        util:wait(200)
+(:        ,jmmc-tap:_send-request($uri, $params, $votable):)
     }
     let $response-status := $response[1]/@status
 
@@ -67,12 +68,12 @@ declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as 
                     else
                         fn:parse-xml($body)
             } catch * {
-                error(xs:QName('jmmc-tap:TAP'), 'Failed to retrieve data (HTTP_STATUS='|| $response-status ||', query='||$query|| ', body='||$body|| ')', $query)
+                error(xs:QName('jmmc-tap:TAP'), 'Failed to retrieve data (HTTP_STATUS='|| $response-status ||', query='||$query|| ', body='||$body|| ')', $response)
             }
     else if (count($response[1]/http:body) != 1) then
         error(xs:QName('jmmc-tap:TAP'), 'Bad content returned')
     else
-        error(xs:QName('jmmc-tap:TAP'), 'Failed to retrieve data (HTTP_STATUS='|| $response-status ||', query='||$query||')', $query)
+        error(xs:QName('jmmc-tap:TAP'), 'Failed to retrieve data (HTTP_STATUS='|| $response-status ||', query='||$query||')', $response)
 
 };
 
@@ -155,13 +156,15 @@ declare function jmmc-tap:tap-adql-query($uri as xs:string, $query as xs:string,
 let $cache-name := $jmmc-tap:cache-prefix||$uri
 let $votable-hash := if(exists($votable)) then "VOTMD5"||util:hash($votable, "md5") else ()
 let $cache-key := string-join(($votable-hash,$query,$maxrec,$format))
-let $create-cache := cache:create($cache-name, map { "maximumSize": 2048 }) (: TODO:  check that given limit is taken into account was 128 before :)
+let $create-cache := cache:create($cache-name, map { "maximumSize": $jmmc-tap:cache-size }) (: TODO:  check that given limit is taken into account was 128 before :)
 let $cached := cache:get($cache-name, $cache-key)
     return
         if(exists($cached)) then $cached
         else
             let $res := jmmc-tap:_tap-adql-query($uri, $query, $votable, $maxrec, $format)
-            let $store := cache:put($cache-name, $cache-key, $res)
+            let $error := if ($res//*:TR) then false() else exists($res//*:INFO[@name='QUERY_STATUS' and @value='ERROR'])
+            let $store := if($error) then () else cache:put($cache-name, $cache-key, $res)
+            let $log := if($error) then util:log("error", "error occurs no cache set for "||$cache-name) else util:log("info", "cache set for "||$cache-name)
             return $res
 };
 
