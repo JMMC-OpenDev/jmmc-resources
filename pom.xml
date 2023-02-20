@@ -10,8 +10,8 @@
         <relativePath/>
     </parent>
 
-    <groupId>fr.jmmc.exist</groupId>
-    <artifactId>jmmc-resources</artifactId>
+    <groupId>fr.jmmc</groupId>
+    <artifactId>exist</artifactId>
 
     <packaging>pom</packaging>
     <name>JMMC OiDB Common module</name>
