@@ -11,10 +11,10 @@
     </parent>
 
     <groupId>fr.jmmc</groupId>
-    <artifactId>exist</artifactId>
+    <artifactId>jmmc-resources</artifactId>
 
     <packaging>pom</packaging>
-    <name>JMMC OiDB Common module</name>
+    <name>JMMC Common module</name>
 
     <properties>
         <!-- do copy dependencies -->
