@@ -11,97 +11,102 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.41">
+            <ul xmlns="">
+              <li>jmmc-dateutil: add RFC822toISO8601() converter.</li>
+            </ul>
+        </change>
         <change version="0.40">
-            <ul xmlns=""> 
+            <ul xmlns="">
               <li>jmmc-tap: add capability to query using an uploaded table.</li>
               <li>jmmc-tap: improve cache management.</li>
             </ul>
         </change>
         <change version="0.39">
-            <ul xmlns=""> 
+            <ul xmlns="">
               <li>jmmc-tap: improve rest services votable2sql and votable2schema.</li>
             </ul>
         </change>
         <change version="0.38">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-tap: normalize sapces of tap queries (this helped to fix a nasty bug querying Simbad-tap).</li>
             </ul>
         </change>
         <change version="0.37">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-simbad: retrieve pmra and pmdec resolving names or positions.</li>
             </ul>
         </change>
         <change version="0.36">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-web: add get-encoded-email-array($email) and get-encoded-email-decoder().</li>
             </ul>
         </change>
         <change version="0.35">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-web: fix JMMC's logo url.</li>
             </ul>
         </change>
         <change version="0.34">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-tap: fix Simbad and add GAVO tap sync endpoints.</li>
                 <li>technical: make it eXistDB6 compatible</li>
             </ul>
         </change>
         <change version="0.33">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>adsabs: add get-bibtex, get-volume, get-pages functions.</li>
             </ul>
         </change>
         <change version="0.32">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-tap: improve API and support json format.</li>
             </ul>
         </change>
         <change version="0.31">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>adsabs: improve API.</li>
                 <li>New module tap: query TAP synchronously easily.</li>
             </ul>
         </change>
         <change version="0.30">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>adsabs: change ads namespace according related to issue fix on ADS side.</li>
             </ul>
         </change>
         <change version="0.29">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-vizier: small changes to follow CDS's ones.</li>
                 <li>introduce adsabs: should replace ads module in the future.</li>
             </ul>
         </change>
         <change version="0.28">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-ads: still fix webservice endpoint waiting for a compliant API on the new ADS's webservices</li>
             </ul>
         </change>
         <change version="0.27">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-about: fix current version getter </li>
             </ul>
         </change>
         <change version="0.26">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-eso: adjust wdb html decryption</li>
             </ul>
         </change>
         <change version="0.25">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>deps: update oitools to consider as a single instrument multiples INSNAMEs which starts with INSTRUME keyword.</li>
             </ul>
         </change>
         <change version="0.24">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>deps: update oitools to set severity to INFO for the UNKNOWN_TABLE rule instead of SEVERE</li>
             </ul>
         </change>
          <change version="0.23">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-cache: should be made deprecated since new existdb's cache mecanism</li>
                 <li>jmmc-about: fix new map format</li>
                 <li>jmmc-eso, jmmc-auth: fix httpclient calls</li>
@@ -115,28 +120,28 @@
             </ul>
         </change>
          <change version="0.22">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-vizier: add TAP support</li>
                 <li>jmmc-astro: parse-hms() now returns angles in 0-360 range (was -180-180)</li>
             </ul>
         </change>
          <change version="0.21">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-vizier: add dependency to install ft-client module</li>
             </ul>
         </change>
          <change version="0.20">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-oiexplorer: update oitools (fix missing keywords)</li>
             </ul>
         </change>
         <change version="0.19">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-web: update and improve dynamic menu</li>
             </ul>
         </change>
         <change version="0.18">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-vizier: add more logs on server side</li>
                 <li>jmmc-simbad: update namespace according to simbad changes on CDS side</li>
                 <li>jmmc-simbad: add search-names() so we help the user to find star by part of name (eg. Lup)</li>
@@ -145,7 +150,7 @@
             </ul>
         </change>
         <change version="0.17">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>Fix dependancy url for the EXPath File Transfer Client Module Implementation </li>
                 <li>jmmc-date: add Julian Day support with jmmc-dateutil:JDtoISO8601() and jmmc-dateutil:ISO8601toJD()</li>
                 <li>jmmc-date: add UT support with jmmc-dateutil:UTtoISO8601(), jmmc-dateutil:ISO8601toUT(), jmmc-dateutil:UTtoMJD()</li>
@@ -154,17 +159,17 @@
             </ul>
         </change>
         <change version="0.16">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>Update to latest oitools.jar</li>
             </ul>
         </change>
         <change version="0.15">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-about : fix map for stable applications </li>
             </ul>
         </change>
         <change version="0.14">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>New module jmmc-xml : provide utility function related to xml</li>
                 <li>jmmc-about : add jmmc-about:status() template function to retrieve the application status (stored in repo.xml) </li>
             </ul>
@@ -175,14 +180,14 @@
                 <li>jmmc-astro : add function handling of optical wavelength divisions (visible, near-ir, mid-ir)</li>
         </change>
         <change version="0.12">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>New module jmmc-xml : provide utility function related to xml</li>
                 <li>jmmc-ads : cache ads records in db, add get-html()</li>
                 <li>jmmc-cache : add get-keys(), get() with multiples keys and change add() to return the inserted data</li>
             </ul>
         </change>
         <change version="0.11">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>New module jmmc-csv : provide functions to split a CSV string into fields or xml table</li>
                 <li>New module jmmc-cache : provide helpers to manage a cache into a database document</li>
                 <li>jmmc-ads : add get-bibcode() and get-link() functions</li>
@@ -192,19 +197,19 @@
             </ul>
         </change>
         <change version="0.10">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>New module jmmc-eso : provide helpers/rest urls to retrieve data from the eso webarea</li>
                 <li>Update oitools.jar to extract keywords of primary HDU</li>
                 <li>Deprecated module jmmc-oival: replaced by jmmc-oiexplorer</li>
             </ul>
         </change>
         <change version="0.9">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>jmmc-auth : add check-credential() functions and rename all function using the default naming convention</li>
             </ul>
         </change>
         <change version="0.8">
-            <ul xmlns=""> 
+            <ul xmlns="">
                 <li>New module jmmc-simbad : query CDS-simbad through its TAP interface</li>
                 <li>jmmc-auth : add getObfuscatedEmail()</li>
                 <li>jmmc-vizier : Improve reliability to query VizieR informations</li>

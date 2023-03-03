@@ -2,19 +2,19 @@ xquery version "3.0";
 
 (:~
  : Utility functions for dates ( RFC822/RSS, MJD , elapsedTime)
- : Import module 
+ : Import module
  : import module namespace jmmc-dateutil="http://exist.jmmc.fr/jmmc-resources/dateutil" at "/db/apps/jmmc-resources/content/jmmc-dateutil.xql";
- : or import last version of updated library 
- : 
+ : or import last version of updated library
+ :
  : TODO: re-implement following conversion formulae  ( see https://fr.wikipedia.org/wiki/Jour_julien#cite_note-Source_Meeus-5 )
  : GM trusts xquery date handling LB not ;)
- : 
+ :
  :)
 module namespace jmmc-dateutil="http://exist.jmmc.fr/jmmc-resources/dateutil";
 
 (:~
  : Return day abbreviation.
- : 
+ :
  : @param $dateTime date to analyse
  : @return Sun, Mon, Tue, Wed, Thu, Fri, Sat according given date.
  :)
@@ -30,16 +30,30 @@ as xs:string
 
 (:~
  :  Return Month abreviation
- : 
+ :
  :  @param $dateTime given date
- :  @return month abreviation of given date
+ :  @return month abreviation of given date or empty sequence if unapplicable
  :)
 declare function jmmc-dateutil:month-abbreviation($dateTime as xs:dateTime)
-as xs:string
+as xs:string?
 {
-    ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec
-        ')[fn:month-from-dateTime($dateTime)]
+    let $m := map{    1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr', 5:'May', 6:'Jun', 7:'Jul', 8:'Aug', 9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec' }
+    return $m(fn:month-from-dateTime($dateTime))
 };
+
+(:~
+ :  Return Month index using the first 3 letters
+ :
+ :  @param $month-name given month value
+ :  @return month index or empty sequence if unapplicable
+ :)
+declare function jmmc-dateutil:month-index($month-name as xs:string)
+as xs:string?
+{
+    let $m := map{'jan':'01', 'feb':'02', 'mar':'03', 'apr':'04', 'may':'05', 'jun':'06', 'jul':'07', 'aug':'08', 'sep':'09', 'oct':'10', 'nov':'11', 'dec':'12'}
+    return $m(lower-case(substring($month-name, 1,3)))
+};
+
 
 declare function jmmc-dateutil:format-timezone($dateTime as xs:dateTime)
 as xs:string
@@ -60,8 +74,22 @@ as xs:string
 };
 
 (:~
- :  Return iso8601 date to RFC822 (used by RSS format)
- : 
+ :  Convert RFC822 date to iso8601 (may come from RSS of HTTP last-modified header)
+ :
+ :  @param $rfcDate given RFC822 date string
+ :  @return iso8601 date
+ :)
+declare function jmmc-dateutil:RFC822toISO8601($rfcDate as xs:string)
+as xs:dateTime
+{
+    let $tks := tokenize($rfcDate)
+    let $els := ( string-join(($tks[4],jmmc-dateutil:month-index($tks[3]),$tks[2]), '-'), 'T', $tks[5] )
+    return xs:dateTime(string-join($els))
+};
+
+(:~
+ :  Convert iso8601 date to RFC822 (used by RSS format)
+ :
  :  @param $dateTime given date
  :  @return rfc822 date
  :)
@@ -76,10 +104,9 @@ as xs:string
                   jmmc-dateutil:format-number(fn:ceiling(fn:seconds-from-dateTime($dateTime))), ' ', '+0200')
 };
 
-
 (:~
  : Convert a mjd date to iso8601
- : 
+ :
  : @param $mjd Modified Julian Day to convert
  : @return the associated datetime
  :)
@@ -87,30 +114,30 @@ declare function jmmc-dateutil:MJDtoISO8601($mjd as xs:double)
 as xs:dateTime
 {
     (: http://tycho.usno.navy.mil/mjd.html
-        $JD0  := xs:dateTime("-4712-01-01T12:00:00")    
-        $MJD0 := $JD0 + xs:dayTimeDuration('P1D')* 2400000.5 
+        $JD0  := xs:dateTime("-4712-01-01T12:00:00")
+        $MJD0 := $JD0 + xs:dayTimeDuration('P1D')* 2400000.5
               := 1858-12-25T00:00:00 as computed by exist-db
-              but should be 1858-11-17T00:00:00       
+              but should be 1858-11-17T00:00:00
     :)
     xs:dateTime("1858-11-17T00:00:00") + $mjd * xs:dayTimeDuration('P1D')
 };
 
 (:~
- : Convert an iso8601 date to mjd 
- : 
+ : Convert an iso8601 date to mjd
+ :
  : @param $dateTime datetime to convert
  : @return the associated mjd
  :)
 declare function jmmc-dateutil:ISO8601toMJD($dateTime as xs:dateTime)
 as xs:double
 {
-    ($dateTime - xs:dateTime("1858-11-17T00:00:00")) div xs:dayTimeDuration('P1D')    
+    ($dateTime - xs:dateTime("1858-11-17T00:00:00")) div xs:dayTimeDuration('P1D')
 };
 
 
 (:~
  : Convert a Julian Day to iso8601
- : 
+ :
  : @param $jd Julian Day to convert
  : @return the associated datetime
  :)
@@ -118,8 +145,8 @@ declare function jmmc-dateutil:JDtoISO8601($jd as xs:double)
 as xs:dateTime
 {
     (: http://aa.usno.navy.mil/cgi-bin/aa_jdconv.pl?form=2&jd=0
-        $JD0  := xs:dateTime("-4713-01-01T12:00:00")    
-            but should be -4713-11-24T12:00:00      
+        $JD0  := xs:dateTime("-4713-01-01T12:00:00")
+            but should be -4713-11-24T12:00:00
     :)
     xs:dateTime("-4713-11-24T12:00:00") + $jd * xs:dayTimeDuration('P1D')
 };
@@ -127,19 +154,19 @@ as xs:dateTime
 
 (:~
  : Convert an iso8601 to Julian Day
- : 
+ :
  : @param $dateTime datetime to convert
  : @return the associated jd
  :)
 declare function jmmc-dateutil:ISO8601toJD($dateTime as xs:dateTime)
 as xs:double
 {
-    ($dateTime - xs:dateTime("-4714-11-24T12:00:00")) div xs:dayTimeDuration('P1D')    
+    ($dateTime - xs:dateTime("-4714-11-24T12:00:00")) div xs:dayTimeDuration('P1D')
 };
 
 (:~
  : Convert an UT date to iso8601
- : 
+ :
  : @param $ut UT date to convert [s]
  : @param $epoch reference epoch of J2000 if empty
  : @return the associated datetime
@@ -155,7 +182,7 @@ as xs:dateTime
 
 (:~
  : Convert an iso8601 to UT date
- : 
+ :
  : @param $dateTime datetime to convert
  : @param $epoch reference epoch of J2000 if empty
  : @return the associated ut [s]
@@ -170,7 +197,7 @@ as xs:double
 
 (:~
  : Convert an UT date to MJD
- : 
+ :
  : @param $dateTime datetime to convert
  : @param $epoch reference epoch of J2000 if empty
  : @return the associated ut [s]
