@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.42">
+            <ul xmlns="">
+              <li>update jars.</li>
+            </ul>
+        </change>
         <change version="0.41">
             <ul xmlns="">
               <li>jmmc-dateutil: add RFC822toISO8601() converter.</li>
