@@ -21,12 +21,6 @@ let $op := xmldb:create-collection("/ads", "records")
 let $op := sm:chmod( xs:anyURI("/ads/records"), "rwxrwxrwx")
 
 
-(: remove public access on exide even if this is better to be not reachable from the web... :)
-(:let $avoid_public_exide := update replace doc("/db/apps/eXide/configuration.xml")/configuration/restrictions/@guest  with "no" :)
-
-let $dep := repo:install-and-deploy("http://expath.org/ns/ft-client", "1.2.0", "http://demo.exist-db.org/exist/apps/public-repo/modules/find.xql") 
-
-
 (:
  TODO:
  - copy data/collection.xconf into /db/ads so we index bibcode elements
