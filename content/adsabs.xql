@@ -306,8 +306,7 @@ declare function adsabs:update-library($id as xs:string, $name as xs:string?, $d
 (: add -X DELETE equ. for delete-library($id) :)
 
 declare function adsabs:library-add($name-or-id, $bibcodes){
-  
-  adsabs:library-add-or-remove($name-or-id, $bibcodes, "add")
+    adsabs:library-add-or-remove($name-or-id, $bibcodes, "add")
 };
 
 declare function adsabs:library-remove($name-or-id, $bibcodes){
@@ -316,18 +315,22 @@ declare function adsabs:library-remove($name-or-id, $bibcodes){
 
 declare function adsabs:library-clear($name-or-id){
     (: todo : try to mimic empty action   :)
-    let $bibcodes := adsabs:library-get-bibcodes($name-or-id)
+    let $bibcodes := adsabs:library-get-bibcodes($name-or-id, false())
     return 
         adsabs:library-add-or-remove($name-or-id, $bibcodes, "remove")  
 };
 
 
 declare %private function adsabs:library-add-or-remove($name-or-id, $bibcodes, $action){
-    let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
-    let $payload := '{"action":"'||$action||'" ,"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
-    let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
-    return 
-        parse-json(adsabs:query("/biblib/documents/"||$id, $payload, false()))
+    if ($bibcodes) then
+        let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
+        let $payload := '{"action":"'||$action||'" ,"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
+        let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
+        return 
+            parse-json(adsabs:query("/biblib/documents/"||$id, $payload, false()))
+    else 
+        util:log("info", "Skipping action on library " || $name-or-id || ". no bibcode provided for "||$action)
+  
 };
 
 declare function adsabs:search-bibcodes($query) as xs:string*{ 
@@ -347,6 +350,21 @@ declare function adsabs:search($query as xs:string, $fl as xs:string?, $use-cach
     ||string-join(("",for $f in $fl return encode-for-uri($f)),"&amp;fl=") 
     ||"&amp;rows=2000"
     , (), $use-cache)
+    )
+};
+
+declare function adsabs:search-map($params as map(*), $use-cache as xs:boolean)
+{
+    let $params-keys := map:keys($params)
+    let $defaults := (
+        if(exists($params-keys[starts-with(., "facet.")])) then map{"facet":"true"} else ()
+        ,map{"wt":"xml"}
+    )
+    let $params := map:merge(($defaults,$params)) (: params values have higher priority on last merged position:)
+    let $query-params := "?" || string-join(map:for-each($params, function($k, $v){string-join(($k, encode-for-uri($v)), "=")}), "&amp;")
+    return 
+    parse-json(
+        adsabs:query("/search/query"||$query-params, (), $use-cache)
     )
 };
 
@@ -630,5 +648,4 @@ function adsabs:test-module( ) {
             string-join((adsabs:get-title($rec),adsabs:get-journal($rec),adsabs:get-first-author($rec)),"   |")[$debug]
         )
 };
-
 
