@@ -11,6 +11,12 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.43.0">
+            <ul xmlns="">
+              <li>Refactor ft-client dependency installation.</li>
+              <li>adsabs : improve corner cases reliability.</li>
+            </ul>
+        </change>
         <change version="0.42">
             <ul xmlns="">
               <li>update jars.</li>
