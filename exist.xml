@@ -10,5 +10,6 @@
     <jar>jmal-TRUNK.jar</jar>
     <jar>oitools-TRUNK.jar</jar>
     <jar>oiexplorer-existdb-TRUNK.jar</jar>
+    <!-- for test see build.xml <jar>slf4j-api-2.0.7.jar</jar>-->
 
 </package>

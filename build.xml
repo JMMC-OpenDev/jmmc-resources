@@ -18,5 +18,8 @@
         <copy todir="content" verbose="true">
             <fileset dir="target/jmmc-libs" includes="*.jar" />
         </copy>
+        <!-- tested with inclusion in xar to avoid class not found exception without success  
+          <copy file="target/original-libs/slf4j-api-2.0.7.jar" todir="content" verbose="true"/>
+        -->
     </target>
 </project>
