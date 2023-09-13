@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.44.0">
+            <ul xmlns="">
+              <li>adsabs : add support to manage libraries's collaborators.</li>
+            </ul>
+        </change>
         <change version="0.43.0">
             <ul xmlns="">
               <li>Refactor ft-client dependency installation.</li>
