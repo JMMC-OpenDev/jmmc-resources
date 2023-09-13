@@ -333,9 +333,8 @@ declare function adsabs:library-clear($name-or-id){
         adsabs:library-add-or-remove($name-or-id, $bibcodes, "remove")
 };
 
-
 declare %private function adsabs:library-add-or-remove($name-or-id, $bibcodes, $action){
-    if ($bibcodes) then
+    if (exists($bibcodes)) then
         let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
         let $payload := '{"action":"'||$action||'" ,"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
         let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
