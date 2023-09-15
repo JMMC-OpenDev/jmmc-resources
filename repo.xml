@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.45.0">
+            <ul xmlns="">
+              <li>dateutil : add timestampToDateTime() to convert seconds since the epoch (1970-01-01 UTC) to a datetime.</li>
+            </ul>
+        </change>
         <change version="0.44.0">
             <ul xmlns="">
               <li>adsabs : add support to manage libraries's collaborators.</li>

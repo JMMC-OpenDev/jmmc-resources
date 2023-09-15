@@ -263,4 +263,10 @@ declare function jmmc-dateutil:duration($from as xs:time, $to as xs:time, $label
         <a href="#" title="from { $from } to {$to} : {$duration}">{if(exists($label)) then ($label, "&#160;") else ()} { seconds-from-duration($duration) }s</a>
 };
 
+(:~
+ : Convert seconds since the epoch (1970-01-01 UTC) to a datetime
+ :)
+declare function jmmc-dateutil:timestampToDateTime($timestamp as xs:integer){
+    xs:dateTime('1970-01-01T00:00:00') + xs:dayTimeDuration(concat('PT', $timestamp, 'S'))
+};
 
