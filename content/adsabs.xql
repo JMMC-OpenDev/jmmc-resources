@@ -334,15 +334,16 @@ declare function adsabs:library-clear($name-or-id){
 };
 
 declare %private function adsabs:library-add-or-remove($name-or-id, $bibcodes, $action){
-    if (exists($bibcodes)) then
-        let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
-        let $payload := '{"action":"'||$action||'" ,"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
-        let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
-        return
-            parse-json(adsabs:query("/biblib/documents/"||$id, $payload, false()))
-    else
-        util:log("info", "Skipping action on library " || $name-or-id || ". no bibcode provided for "||$action)
-
+    let $bibcodes := $bibcodes[.!='']
+    return
+        if (exists($bibcodes)) then
+            let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
+            let $payload := '{"action":"'||$action||'" ,"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
+            let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
+            return
+                parse-json(adsabs:query("/biblib/documents/"||$id, $payload, false()))
+        else
+            util:log("info", "Skipping action on library " || $name-or-id || ". no bibcode provided for "||$action)
 };
 
 declare function adsabs:search-bibcodes($query) as xs:string*{
@@ -350,12 +351,12 @@ declare function adsabs:search-bibcodes($query) as xs:string*{
 };
 
 (: Search without using cache :)
-declare function adsabs:search($query as xs:string, $fl as xs:string?)
+declare function adsabs:search($query as xs:string, $fl as xs:string*)
 {
     adsabs:search($query, $fl, true())
 };
 
-declare function adsabs:search($query as xs:string, $fl as xs:string?, $use-cache as xs:boolean)
+declare function adsabs:search($query as xs:string, $fl as xs:string*, $use-cache as xs:boolean)
 {
     parse-json(
         adsabs:query("/search/query?q="||encode-for-uri($query)
@@ -365,7 +366,11 @@ declare function adsabs:search($query as xs:string, $fl as xs:string?, $use-cach
     )
 };
 
-declare function adsabs:search-map($params as map(*), $use-cache as xs:boolean)
+(:~
+ : Give access to the solr endpoint.
+ : default output format is defined to xml.
+ :)
+declare function adsabs:search-solr($params as map(*), $use-cache as xs:boolean)
 {
     let $params-keys := map:keys($params)
     let $defaults := (
@@ -379,7 +384,6 @@ declare function adsabs:search-map($params as map(*), $use-cache as xs:boolean)
         adsabs:query("/search/query"||$query-params, (), $use-cache)
     )
 };
-
 
 
 (: --- GETTER functions :)
