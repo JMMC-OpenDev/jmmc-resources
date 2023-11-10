@@ -21,6 +21,36 @@ declare variable $jmmc-tap:cache-prefix := "_jmmc-tap-cache-";
 declare variable $jmmc-tap:cache-size := 1024; (: extend default value of 128 :)
 
 
+(:~
+ : Convert given html table to VOTable v1.3
+ : - names of FIELDS are retrieved from th values with my_ prefix
+ : - datatypes of FIELDS are double or string (guess is done from first row).
+ : @param $table input table
+ : @param $name name of created TABLE (that can be use for later query with tap-upload)
+ :)
+declare function jmmc-tap:table2votable($table, $name){
+    <VOTABLE xmlns="http://www.ivoa.net/xml/VOTable/v1.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.4" xsi:schemaLocation="http://www.ivoa.net/xml/VOTable/v1.3 http://www.ivoa.net/xml/VOTable/v1.3">
+        <RESOURCE type="input">
+            <TABLE name="{$name}">
+                {
+                    let $first-td-to-guess-types := ($table//*:tr[*:td])[1]/*:td
+                    for $col at $pos in $table//*:th
+                        let $type := try{ let $a := xs:double($first-td-to-guess-types[$pos]) return "double"} catch * {"char"}
+                        let $arraysize := if($type="char") then "*" else "1"
+                        return <FIELD datatype="{$type}" arraysize="{$arraysize}" name="my_{$col}"/>
+                }
+                <DATA>
+                    <TABLEDATA>
+                        { for $tr in $table//*:tr[*:td] return <TR>{for $td in $tr/*:td return <TD>{data($td)}</TD>}</TR> }
+                    </TABLEDATA>
+                </DATA>
+            </TABLE>
+        </RESOURCE>
+    </VOTABLE>
+};
+
+
+
 declare function jmmc-tap:tap-adql-query-uri($uri as xs:string, $query as xs:string, $maxrec as xs:integer?, $format as xs:string?) {
     let $uri := $uri || '?' || string-join((
         'REQUEST=doQuery',
@@ -38,7 +68,7 @@ declare function jmmc-tap:tap-adql-query-uri($uri as xs:string, $query as xs:str
  : table name (//TABLE@name) must be used in query using tap_upload. prefix
  : @param $uri SYNC tap endpoint URI
  :)
-declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as xs:string, $votable as node()?, $maxrec as xs:integer?, $format as xs:string?) {
+declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as xs:string, $votable as node()?, $maxrec as xs:integer?, $format as xs:string?, $votable-name as xs:string?) {
 
     let $params := map{
         'REQUEST':'doQuery',
@@ -49,7 +79,7 @@ declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as 
     }
 
     let $response := try {
-        jmmc-tap:_send-request($uri, $params, $votable)
+        jmmc-tap:_send-request($uri, $params, $votable, $votable-name)
     } catch * {
         util:wait(200)
 (:        ,jmmc-tap:_send-request($uri, $params, $votable):)
@@ -81,10 +111,10 @@ declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as 
  : Format query and send a get request if votable is not present else do a post request.
  :
  :)
-declare %private function jmmc-tap:_send-request($uri, $params, $votable){
+declare %private function jmmc-tap:_send-request($uri, $params, $votable, $votable-name){
     if (exists($votable)) then
         let $table-name := data($votable//*:TABLE/@name)
-        let $params := map:merge(( $params, map{'UPLOAD': $table-name||',param:table1'} ))
+        let $params := map:merge(( $params, map{'UPLOAD': ($table-name, $votable-name)[1]||',param:table1'} ))
         return
             http:send-request(<http:request method="POST" href="{$uri}">
                 <http:multipart media-type="multipart/form-data" boundary="----------JMMCTAPXQL">
@@ -153,6 +183,25 @@ declare function jmmc-tap:tap-adql-query($uri as xs:string, $query as xs:string,
  :
  :)
 declare function jmmc-tap:tap-adql-query($uri as xs:string, $query as xs:string, $votable as node()?, $maxrec as xs:integer?, $format as xs:string?)  {
+    jmmc-tap:tap-adql-query($uri, $query, $votable, $maxrec, $format, ())
+};
+
+(:~
+ : Execute an ADQL query against a TAP service.
+ :
+ : Warning: CDS set a query limit for the TAP service of max 6 requests per second.
+ : 403 error code is returned when limit is encountered.
+ :
+ : @param $uri   the URI of a TAP sync resource
+ : @param $query the ADQL query to execute
+ : @param $votable an optional votable to upload ( use table name prefixed by tap_upload. in your query)
+ : @param $format optional format / votable by default
+ : @param $votable-name optional name to use in the FROM tap_upload.votable-name if table has no name
+  : @return a VOTable with results for the query (result is cached: see tap-clear-cache() )  or other requested format
+ : @error service unavailable, bad response
+ :
+ :)
+declare function jmmc-tap:tap-adql-query($uri as xs:string, $query as xs:string, $votable as node()?, $maxrec as xs:integer?, $format as xs:string?, $votable-name as xs:string?)  {
 let $cache-name := $jmmc-tap:cache-prefix||$uri
 let $votable-hash := if(exists($votable)) then "VOTMD5"||util:hash($votable, "md5") else ()
 let $cache-key := string-join(($votable-hash,$query,$maxrec,$format))
@@ -161,7 +210,7 @@ let $cached := cache:get($cache-name, $cache-key)
     return
         if(exists($cached)) then $cached
         else
-            let $res := jmmc-tap:_tap-adql-query($uri, $query, $votable, $maxrec, $format)
+            let $res := jmmc-tap:_tap-adql-query($uri, $query, $votable, $maxrec, $format, $votable-name)
             let $error := if ($res//*:TR) then false() else exists($res//*:INFO[@name='QUERY_STATUS' and @value='ERROR'])
             let $store := if($error) then () else cache:put($cache-name, $cache-key, $res)
             let $log := if($error) then util:log("error", "error occurs no cache set for "||$cache-name) else util:log("info", "cache set for "||$cache-name)
