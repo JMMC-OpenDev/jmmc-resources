@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.45.0" spec="1.0">
+<package xmlns="http://expath.org/ns/pkg" name="http://exist.jmmc.fr/jmmc-resources" abbrev="jmmc-resources" version="0.46.0" spec="1.0">
     <title>JMMC Commons module</title>
     <dependency processor="http://exist-db.org" semver-min="6.0.0"/>
-    <dependency package="http://expath.org/ns/ft-client" semver-min="1.2.0"/>
-
-    <xquery>
+    <!--  
+      -->
+    <dependency package="http://expath.org/ns/ft-client" semver-min="1.2.0"/>  <xquery>
         <namespace>http://exist.jmmc.fr/jmmc-resources/about</namespace>
         <file>jmmc-about.xql</file>
     </xquery>
