@@ -14,6 +14,9 @@ xquery version "3.0";
  :)
 module namespace jmmc-simbad="http://exist.jmmc.fr/jmmc-resources/simbad";
 
+import module namespace jmmc-tap="http://exist.jmmc.fr/jmmc-resources/tap" at "jmmc-tap.xql";
+
+
 declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.3";
 declare namespace http="http://expath.org/ns/http-client";
 
@@ -98,6 +101,61 @@ declare %private function jmmc-simbad:escape($str as xs:string) as xs:string {
 };
 
 (:~
+ : Try to identify somes targets from the given identifiers on CDS Simbad.
+ :
+ : @param $identifiers the target names
+ : @return a votable with one row per identifier and simbad info (name, ra, dec, pmra, pmdec, id) if found.
+ :)
+declare function jmmc-simbad:votable4identifiers($identifiers as xs:string*){
+  let $table :=
+        <table>
+        <tr><th>identifier</th></tr>
+        {
+            for $identifier in $identifiers
+                return <tr><td>{$identifier}</td></tr>
+        }
+        </table>
+    let $name := "whynot"
+    let $votable := jmmc-tap:table2votable($table, $name)
+  
+    let $query := "SELECT whynot.*, main_id AS name, ra, dec, pmra, pmdec, oid AS id " ||
+        "FROM basic JOIN ident ON oidref=oid RIGHT JOIN TAP_UPLOAD.whynot as whynot ON id=my_identifier"
+    return
+        jmmc-tap:tap-adql-query($jmmc-simbad:TAP-SYNC, $query, $votable, count($identifiers), "votable/td")
+};
+
+(:~
+ : Try to identify somes targets from the given identifiers on CDS Simbad.
+ :
+ : @param $identifiers the target names
+ : @return a map of identifiers / targets (same format as resolve-by-name) value is empty if identifier is unknown on Simbad.
+ :)
+declare function jmmc-simbad:resolve-by-names($identifiers as xs:string*) as item()* {
+    let $votable := jmmc-simbad:votable4identifiers($identifiers)
+    let $map := map:merge(
+        for $tr in $votable//*:TR
+            let $my_identifier := data($tr/*:TD[1])
+            let $id := data($tr/*:TD[7])
+            let $target := if (exists($id)) then
+                <target>
+                    {
+                    element {"name"} {data($tr/*:TD[2])}
+                    ,element {"ra"} {data($tr/*:TD[3])}
+                    ,element {"dec"} {data($tr/*:TD[4])}
+                    ,element {"pmra"} {data($tr/*:TD[5])}
+                    ,element {"pmdec"} {data($tr/*:TD[6])}
+                    ,element {"id"} {data($tr/*:TD[7])}
+                    }
+                </target>
+            else
+                ()
+            return map:entry($my_identifier, $target)
+        )
+    return $map
+};
+
+
+(:~
  : Try to identify a target from its name with Simbad.
  :
  : @param $identifier the target name
@@ -118,7 +176,7 @@ declare function jmmc-simbad:resolve-by-name($identifier as xs:string) as item()
 declare function jmmc-simbad:resolve-by-name($identifier as xs:string, $ra as xs:double?, $dec as xs:double?) as item()* {
     let $do-dist := ($ra and $dec)
     let $query :=
-        "SELECT oid AS id, ra, dec, main_id AS name, pmra, pmdec " || (if($do-dist) then ", DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist " else " ") ||
+        "SELECT main_id AS name, ra, dec, pmra, pmdec, oid AS id " || (if($do-dist) then ", DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist " else " ") ||
         "FROM basic JOIN ident ON oidref=oid " ||
         "WHERE id = '" || jmmc-simbad:escape($identifier) || "' " ||
         (if($do-dist) then "ORDER BY dist" else "")
@@ -136,7 +194,7 @@ declare function jmmc-simbad:resolve-by-name($identifier as xs:string, $ra as xs
  :)
 declare function jmmc-simbad:resolve-by-coords($ra as xs:double, $dec as xs:double, $radius as xs:double) as item()* {
     jmmc-simbad:resolve(
-        "SELECT oid AS id, ra, dec, main_id AS name, DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist , pmra, pmdec " ||
+        "SELECT main_id AS name, ra, dec, pmra, pmdec, oid AS id, DISTANCE(POINT('ICRS', ra, dec), POINT('ICRS', " || $ra || ", " || $dec || ")) AS dist  " ||
         "FROM basic " ||
         "WHERE CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', " || $ra || ", " || $dec || ",  " || $radius || " )) = 1 " ||
         "ORDER BY dist")

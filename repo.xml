@@ -15,6 +15,7 @@
             <ul xmlns="">
               <li>jmmc-tap : tap-adql-query() support optional votable-name for tap-upload.</li>
               <li>jmmc-tap : add table2votable() as helper for tap-upload.</li>
+              <li>jmmc-simbad : add resolve-by-names() to scale-up name resolution (few seconds for one thousand of identifiers).</li>
             </ul>
         </change>
         <change version="0.45.0">
