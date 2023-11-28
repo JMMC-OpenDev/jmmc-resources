@@ -22,6 +22,7 @@ let $op := sm:chmod( xs:anyURI("/ads/records"), "rwxrwxrwx")
 
 
 (:
+let $install := repo:install-and-deploy("http://expath.org/ns/ft-client", "1.2.0", "http://demo.exist-db.org/exist/apps/public-repo/modules/find.xql")
  TODO:
  - copy data/collection.xconf into /db/ads so we index bibcode elements
  - apply xmldb:reindex on /db/ads

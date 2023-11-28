@@ -11,11 +11,12 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
-        <change version="0.46.0">
+        <change version="0.46.1">
             <ul xmlns="">
               <li>jmmc-tap : tap-adql-query() support optional votable-name for tap-upload.</li>
               <li>jmmc-tap : add table2votable() as helper for tap-upload.</li>
               <li>jmmc-simbad : add resolve-by-names() to scale-up name resolution (few seconds for one thousand of identifiers).</li>
+              <li>jmmc-simbad : change resolve-target : always set -0 for missing pmra or pmdec and add user_identifier to store user input.</li>
             </ul>
         </change>
         <change version="0.45.0">

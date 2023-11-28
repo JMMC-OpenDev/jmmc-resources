@@ -58,9 +58,8 @@ declare %private function jmmc-simbad:tap-adql-query($uri as xs:string, $query a
 (:~
  : Return a target description from the VOTable row.
  :
- : The description is made from the oid, ra and dec coordinates and the main
- : name.
- :
+ : The description is made from the main_name, ra, dec, pmra, pmdec coordinates and the oid.
+ : Empty proper motion values are replaced by -0 values
  : @param $row a VOTable row
  : @return a target description as sequence
  :)
@@ -68,7 +67,10 @@ declare %private function jmmc-simbad:target($row as element(votable:TR)) as ele
     <target> {
         for $f at $i in $row/ancestor::votable:TABLE/votable:FIELD
         let $name  := $f/@name
-        let $value := $row/votable:TD[position() = $i]/text()
+        let $value := if ($name=("pmra", "pmdec")) then
+            try{xs:double($row/votable:TD[position() = $i])} catch * {"-0"}
+          else
+            $row/votable:TD[position() = $i]/text()
         return element { $name } { $value }
     } </target>
 };
@@ -109,7 +111,7 @@ declare %private function jmmc-simbad:escape($str as xs:string) as xs:string {
 declare function jmmc-simbad:votable4identifiers($identifiers as xs:string*){
   let $table :=
         <table>
-        <tr><th>identifier</th></tr>
+        <tr><th>user_identifier</th></tr>
         {
             for $identifier in $identifiers
                 return <tr><td>{$identifier}</td></tr>
@@ -119,13 +121,14 @@ declare function jmmc-simbad:votable4identifiers($identifiers as xs:string*){
     let $votable := jmmc-tap:table2votable($table, $name)
   
     let $query := "SELECT whynot.*, main_id AS name, ra, dec, pmra, pmdec, oid AS id " ||
-        "FROM basic JOIN ident ON oidref=oid RIGHT JOIN TAP_UPLOAD.whynot as whynot ON id=my_identifier"
+        "FROM basic JOIN ident ON oidref=oid RIGHT JOIN TAP_UPLOAD.whynot as whynot ON id=my_user_identifier"
     return
         jmmc-tap:tap-adql-query($jmmc-simbad:TAP-SYNC, $query, $votable, count($identifiers), "votable/td")
 };
 
 (:~
  : Try to identify somes targets from the given identifiers on CDS Simbad.
+ : Empty proper motion values are replaced by -0 values
  :
  : @param $identifiers the target names
  : @return a map of identifiers / targets (same format as resolve-by-name) value is empty if identifier is unknown on Simbad.
@@ -134,22 +137,23 @@ declare function jmmc-simbad:resolve-by-names($identifiers as xs:string*) as ite
     let $votable := jmmc-simbad:votable4identifiers($identifiers)
     let $map := map:merge(
         for $tr in $votable//*:TR
-            let $my_identifier := data($tr/*:TD[1])
+            let $user_identifier := data($tr/*:TD[1])
             let $id := data($tr/*:TD[7])
             let $target := if (exists($id)) then
                 <target>
                     {
-                    element {"name"} {data($tr/*:TD[2])}
-                    ,element {"ra"} {data($tr/*:TD[3])}
-                    ,element {"dec"} {data($tr/*:TD[4])}
-                    ,element {"pmra"} {data($tr/*:TD[5])}
-                    ,element {"pmdec"} {data($tr/*:TD[6])}
-                    ,element {"id"} {data($tr/*:TD[7])}
+                    element  {"user_identifier"}  {$user_identifier}
+                    ,element {"name"}  {data($tr/*:TD[2])}
+                    ,element {"ra"}    {data($tr/*:TD[3])}
+                    ,element {"dec"}   {data($tr/*:TD[4])}
+                    ,element {"pmra"}  {try{xs:double($tr/*:TD[5])} catch * {"-0"}}
+                    ,element {"pmdec"} {try{xs:double($tr/*:TD[6])} catch * {"-0"}}
+                    ,element {"id"}    {$id} 
                     }
                 </target>
             else
                 ()
-            return map:entry($my_identifier, $target)
+            return map:entry($user_identifier, $target)
         )
     return $map
 };
