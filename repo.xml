@@ -11,6 +11,12 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.47.0">
+            <ul xmlns="">
+              <li>jmmc-tap : tap-adql-query() use optional votable-name with priority if provided.</li>
+              <li>New module jmmc-ws : function wrapper to call JMMC webservices.</li>
+            </ul>
+        </change>
         <change version="0.46.1">
             <ul xmlns="">
               <li>jmmc-tap : tap-adql-query() support optional votable-name for tap-upload.</li>
