@@ -114,7 +114,7 @@ declare %private function jmmc-tap:_tap-adql-query($uri as xs:string, $query as 
 declare %private function jmmc-tap:_send-request($uri, $params, $votable, $votable-name){
     if (exists($votable)) then
         let $table-name := data($votable//*:TABLE/@name)
-        let $params := map:merge(( $params, map{'UPLOAD': ($table-name, $votable-name)[1]||',param:table1'} ))
+        let $params := map:merge(( $params, map{'UPLOAD': ($votable-name,$table-name)[1]||',param:table1'} ))
         return
             http:send-request(<http:request method="POST" href="{$uri}">
                 <http:multipart media-type="multipart/form-data" boundary="----------JMMCTAPXQL">
@@ -214,6 +214,8 @@ let $cached := cache:get($cache-name, $cache-key)
             let $error := if ($res//*:TR) then false() else exists($res//*:INFO[@name='QUERY_STATUS' and @value='ERROR'])
             let $store := if($error) then () else cache:put($cache-name, $cache-key, $res)
             let $log := if($error) then util:log("error", "error occurs no cache set for "||$cache-name) else util:log("info", "cache set for "||$cache-name)
+            let $log := if($error) then util:log("error", "query : " || serialize($query)) else ()
+            let $log := if($error) then util:log("error", "result : " || serialize($res)) else ()
             return $res
 };
 
