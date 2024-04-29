@@ -7,7 +7,7 @@ xquery version "3.1";
  : Since a barear token is required please set it in cache or store in to module/data/adsabs.xml .
  :
  : Prefer the use of getter to retrieve result's content or use the following namespace to work directly on ads records:
- : declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts";
+ : declare namespace ads="https://ads.harvard.edu/schema/abs/1.1/abstracts";
  :
  : Note: get-record and get-record functions always cache retrieved records
  :
@@ -18,7 +18,7 @@ import module namespace http = "http://expath.org/ns/http-client";
 import module namespace test="http://exist-db.org/xquery/xqsuite" at "resource:org/exist/xquery/lib/xqsuite/xqsuite.xql";
 
 
-declare namespace ads="http://ads.harvard.edu/schema/abs/1.1/abstracts";
+declare namespace ads="https://ads.harvard.edu/schema/abs/1.1/abstracts";
 
 (: define ads cache collection path to store documents :)
 declare variable $adsabs:collection-uri := "/db/ads/records/";
@@ -94,13 +94,16 @@ declare function adsabs:query( $query-url as xs:string, $query-payload as xs:str
         	    return
         	            if ($response-head/@status = ("200","404"))
         	            then
+        	                (: let $log := util:log("info", "response from ads : ") :)
         	                let $json := util:binary-to-string($response-body)
+                            (: let $log := util:log("info", $json ) :)
         	                let $cache := cache:put($adsabs:expirable-cache-name, $key, $json) (: always cache last result :)
                             return $json
         	            else
         	                (util:log("error",replace(serialize($request), $adsabs:token, "XXXXXXXX")),
         	                util:log("error",serialize($response-head)),
         	                util:log("error",serialize($response-body)),
+        	                util:log("error",util:base64-decode(serialize($response-body))),
 (:        	                util:log("error", "token is " || $adsabs:token),:)
         	                fn:error(xs:QName("adsabs:bad-request-1"), $response-head/@status ||":"|| $response-head/@message))
         else
@@ -179,10 +182,12 @@ declare function adsabs:get-records($bibcodes as xs:string*, $use-cache as xs:bo
 
     (: TODO perform a load test to check limit of returned records 2000 ? :)
     let $new-records := if ( exists($bibcodes-todo) ) then
+        let $log := util:log("info", "requesting bibcodes : " || string-join($bibcodes-todo ! concat("&quot;",.,"&quot;"), ", " ) )
         let $quoted-bibcodes-todo := for $b in $bibcodes-todo return "&quot;"||$b||"&quot;"
         let $payload := '{"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
         let $json-resp := adsabs:query("/export/refabsxml",$payload)
         let $json-resp-export := parse-json($json-resp)?export
+        (: let $log := util:log("info", "xml response is : " || $json-resp-export ) :)
         return
             parse-xml($json-resp-export)//ads:record
         else
@@ -192,7 +197,17 @@ declare function adsabs:get-records($bibcodes as xs:string*, $use-cache as xs:bo
 
     let $bibcodes-not-done := $bibcodes-todo[not(.=$new-records/ads:bibcode)]
     let $bibcodes-not-requested := $new-records/ads:bibcode[not(.=$bibcodes-todo)]
-    let $log := if(exists($bibcodes-not-done)) then util:log("warn", "Missmatch between request and response:&#10;absent bibcodes : (&quot;" || string-join($bibcodes-not-done, "&quot;, &quot;") || "&quot;)" || "&#10;unrequested bibcodes : (&quot;" || string-join($bibcodes-not-requested, "&quot;, &quot;") || "&quot;)") else ()
+    let $log := if(exists($bibcodes-not-done))
+        then
+            (
+            util:log("warn", "Missmatch between request and response:")
+            ,util:log("warn", "absent bibcodes : " || string-join($bibcodes-not-done ! concat("&quot;",.,"&quot;"), ", " ) )
+            ,util:log("warn", "unrequested bibcodes : " || string-join($bibcodes-not-requested ! concat("&quot;",.,"&quot;"), ", "))
+            ,util:log("warn", "new records :")
+            ,util:log("warn", $new-records )
+            )
+        else
+            ()
 
     return
         ($new-records,$cached-records)
@@ -248,7 +263,7 @@ declare function adsabs:library($name-or-id)
 };
 declare function adsabs:library($name-or-id, $use-cache as xs:boolean)
 {
-    let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
+    let $id := adsabs:get-libraries()?libraries?*[?name=$name-or-id or ?id=$name-or-id]?id
     return parse-json(adsabs:query("/biblib/libraries/"||$id, (), $use-cache))
 };
 declare function adsabs:library-id($name){
@@ -266,7 +281,7 @@ declare function adsabs:library-get-permissions($name-or-id)
 
 declare function adsabs:library-get-permissions($name-or-id, $use-cache as xs:boolean)
 {
-    let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
+    let $id := adsabs:get-libraries()?libraries?*[?name=$name-or-id or ?id=$name-or-id]?id
     return parse-json(adsabs:query("/biblib/permissions/"||$id, (), $use-cache))
 };
 
@@ -295,7 +310,7 @@ declare function adsabs:library-get-bibcodes($name-or-id, $use-cache as xs:boole
 
 declare function adsabs:library-get-search-expr($name-or-id)
 {
-    let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
+    let $id := adsabs:get-libraries()?libraries?*[?name=$name-or-id or ?id=$name-or-id]?id
     return "docs(library/"||$id||")"
 };
 
@@ -334,12 +349,12 @@ declare function adsabs:library-clear($name-or-id){
 };
 
 declare %private function adsabs:library-add-or-remove($name-or-id, $bibcodes, $action){
-    let $bibcodes := $bibcodes[.!='']
+    let $bibcodes:=$bibcodes[string-length(.)>0]
     return
         if (exists($bibcodes)) then
             let $quoted-bibcodes-todo := for $b in $bibcodes return "&quot;"||$b||"&quot;"
             let $payload := '{"action":"'||$action||'" ,"bibcode": [' || string-join($quoted-bibcodes-todo, ", ") || "]}"
-            let $id := adsabs:get-libraries()?*?*[?name=$name-or-id or ?id=$name-or-id]?id
+            let $id := adsabs:get-libraries()?libraries?*[?name=$name-or-id or ?id=$name-or-id]?id
             return
                 parse-json(adsabs:query("/biblib/documents/"||$id, $payload, false()))
         else
@@ -347,16 +362,20 @@ declare %private function adsabs:library-add-or-remove($name-or-id, $bibcodes, $
 };
 
 declare function adsabs:search-bibcodes($query) as xs:string*{
-    adsabs:search($query, "bibcode")?response?docs?*?bibcode
+    adsabs:search-bibcodes($query, true())
+};
+
+declare function adsabs:search-bibcodes($query, $cache) as xs:string*{
+    adsabs:search($query, "bibcode", $cache)?response?docs?*?bibcode
 };
 
 (: Search without using cache :)
-declare function adsabs:search($query as xs:string, $fl as xs:string*)
+declare function adsabs:search($query as xs:string, $fl as xs:string?)
 {
     adsabs:search($query, $fl, true())
 };
 
-declare function adsabs:search($query as xs:string, $fl as xs:string*, $use-cache as xs:boolean)
+declare function adsabs:search($query as xs:string, $fl as xs:string?, $use-cache as xs:boolean)
 {
     parse-json(
         adsabs:query("/search/query?q="||encode-for-uri($query)
@@ -367,10 +386,12 @@ declare function adsabs:search($query as xs:string, $fl as xs:string*, $use-cach
 };
 
 (:~
- : Give access to the solr endpoint.
- : default output format is defined to xml.
+ : Query ADS using the full SOLR interface
+ : @param $params map of query params ( default output format is defined to wt=xml )
+ : @param $use-cache true use cache to retrieve last result if any else skip flag
+ : @return true if refereed, false else
  :)
-declare function adsabs:search-solr($params as map(*), $use-cache as xs:boolean)
+declare function adsabs:search-map($params as map(*), $use-cache as xs:boolean)
 {
     let $params-keys := map:keys($params)
     let $defaults := (
