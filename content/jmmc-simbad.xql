@@ -13,8 +13,10 @@ xquery version "3.0";
  :    - bump to V1.3 namespace
  :)
 module namespace jmmc-simbad="http://exist.jmmc.fr/jmmc-resources/simbad";
-
+(:
 import module namespace jmmc-tap="http://exist.jmmc.fr/jmmc-resources/tap" at "jmmc-tap.xql";
+:)
+import module namespace jmmc-tap="http://exist.jmmc.fr/jmmc-resources/tap";
 
 
 declare namespace votable="http://www.ivoa.net/xml/VOTable/v1.3";
@@ -119,7 +121,7 @@ declare function jmmc-simbad:votable4identifiers($identifiers as xs:string*){
         </table>
     let $name := "whynot"
     let $votable := jmmc-tap:table2votable($table, $name)
-  
+
     let $query := "SELECT whynot.*, main_id AS name, ra, dec, pmra, pmdec, oid AS id " ||
         "FROM basic JOIN ident ON oidref=oid RIGHT JOIN TAP_UPLOAD.whynot as whynot ON id=my_user_identifier"
     return
@@ -148,7 +150,7 @@ declare function jmmc-simbad:resolve-by-names($identifiers as xs:string*) as ite
                     ,element {"dec"}   {data($tr/*:TD[4])}
                     ,element {"pmra"}  {try{xs:double($tr/*:TD[5])} catch * {"-0"}}
                     ,element {"pmdec"} {try{xs:double($tr/*:TD[6])} catch * {"-0"}}
-                    ,element {"id"}    {$id} 
+                    ,element {"id"}    {$id}
                     }
                 </target>
             else
