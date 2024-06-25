@@ -199,7 +199,6 @@ declare function jmmc-tap:tap-adql-query($uri as xs:string, $query as xs:string,
  : @param $votable-name optional name to use in the FROM tap_upload.votable-name if table has no name
   : @return a VOTable with results for the query (result is cached: see tap-clear-cache() )  or other requested format
  : @error service unavailable, bad response
- :
  :)
 declare function jmmc-tap:tap-adql-query($uri as xs:string, $query as xs:string, $votable as node()?, $maxrec as xs:integer?, $format as xs:string?, $votable-name as xs:string?)  {
 let $cache-name := $jmmc-tap:cache-prefix||$uri
@@ -211,11 +210,18 @@ let $cached := cache:get($cache-name, $cache-key)
         if(exists($cached)) then $cached
         else
             let $res := jmmc-tap:_tap-adql-query($uri, $query, $votable, $maxrec, $format, $votable-name)
-            let $error := if ($res//*:TR) then false() else exists($res//*:INFO[@name='QUERY_STATUS' and @value='ERROR'])
+            
+            let $error := try {
+                if ($res//*:TR) then false() else exists($res//*:INFO[@name='QUERY_STATUS' and @value='ERROR'])    
+            } catch * {
+                false() (: JSON errors seem to be in votable format :)
+            }
+            
             let $store := if($error) then () else cache:put($cache-name, $cache-key, $res)
             let $log := if($error) then util:log("error", "error occurs no cache set for "||$cache-name) else util:log("info", "cache set for "||$cache-name)
             let $log := if($error) then util:log("error", "query : " || serialize($query)) else ()
-            let $log := if($error) then util:log("error", "result : " || serialize($res)) else ()
+            let $log := if($error) then util:log("error", "result : ") else ()
+            let $log := if($error) then util:log("error", $res) else ()
             return $res
 };
 
@@ -229,11 +235,14 @@ declare function jmmc-tap:tap-clear-cache() {
     for $cache-name in $to-clean return cache:clear($cache-name)
 };
 
+(: Convert votable field to sql colname following stilts conventions
+
+:)
 declare function jmmc-tap:get-db-colname( $vot-field )
 {
     let $field-name := try{ ($vot-field/@name, $vot-field)[1] }catch*{ $vot-field } (: search in votable field or use str param :)
     (: TODO  mimic better stilts conversion see : https://github.com/Starlink/starjava/blob/master/table/src/main/uk/ac/starlink/table/jdbc/JDBCFormatter.java :)
-    let $name := lower-case($field-name) ! translate(., "()-", "___")
+    let $name := replace(lower-case($field-name),"\W+", "_")
     return if($name="publication") then $name||"_" else $name
 
     (: TODO check reserved keywords ie. DEC !! :)
@@ -380,6 +389,8 @@ declare
     let $comments := ($comments, if(exists($primary-column))  then "No primary key given as primary-key-name param, using default : "||$primary-key-name else "Using "||$primary-key-name|| " key as primary key")
     let $comments := ($comments, "","No content extracted, please use the catalog API to injest dat or ask jmmc-tech-group for such enhancement")
     let $comments := ($comments, "","Add max "|| $max|| " records to insert (use max parameter = -1 to insert all records )")
+    let $comments := ($comments, "", string-join( for $f at $pos in ($primary-column, $vot//*:FIELD) return jmmc-tap:get-db-colname($f)," | "))
+
     let $sql-comments := string-join($comments , "&#10;-- ")
 
     (: create a description map to help associated table creation and future inserts :)
@@ -387,13 +398,14 @@ declare
         for $f at $pos in ($primary-column, $vot//*:FIELD)
             let $colname := jmmc-tap:get-db-colname($f)
             let $datatype := if($primary-key-name = $colname) then " SERIAL PRIMARY KEY" else jmmc-tap:get-db-datatype($f)
-            return map{$f/@name : map{"colname_prefixed":$pos||"_"||$colname, "colname":$colname , "datatype" : $datatype}}
+            return map{head(($f/@name,"NONAMEXXXX-"||$pos)) : map{"colname_prefixed":$pos||"_"||$colname, "colname":$colname , "datatype" : $datatype}}
         )
 
     let $cols-create :=
         for $f in $fields-desc?*
+            order by $f?colname
             return
-                ("  ", $f?colname, "          ", $f?datatype ) => string-join(" ")
+                ("  ", "&quot;"||$f?colname||"&quot;", "          ", $f?datatype ) => string-join(" ")
 
     let $table-create := string-join(( 'CREATE TABLE ' || $table-name
                     , '('
@@ -451,7 +463,7 @@ declare
     let $cvalues :=
         for $f at $col_index in ( $primary-column, $vot//*:FIELD )
             let $colname := jmmc-tap:get-db-colname($f)
-            let $desc := $f/*:DESCRIPTION||""
+            let $desc := replace($f/*:DESCRIPTION||"", "'", "''")
             let $unit := $f/@unit||""
             let $ucd := $f/@ucd||""
             let $utype := $f/@utype||""
