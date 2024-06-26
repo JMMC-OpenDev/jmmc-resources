@@ -210,13 +210,13 @@ let $cached := cache:get($cache-name, $cache-key)
         if(exists($cached)) then $cached
         else
             let $res := jmmc-tap:_tap-adql-query($uri, $query, $votable, $maxrec, $format, $votable-name)
-            
+
             let $error := try {
-                if ($res//*:TR) then false() else exists($res//*:INFO[@name='QUERY_STATUS' and @value='ERROR'])    
+                if ($res//*:TR) then false() else exists($res//*:INFO[@name='QUERY_STATUS' and @value='ERROR'])
             } catch * {
                 false() (: JSON errors seem to be in votable format :)
             }
-            
+
             let $store := if($error) then () else cache:put($cache-name, $cache-key, $res)
             let $log := if($error) then util:log("error", "error occurs no cache set for "||$cache-name) else util:log("info", "cache set for "||$cache-name)
             let $log := if($error) then util:log("error", "query : " || serialize($query)) else ()
@@ -398,12 +398,12 @@ declare
         for $f at $pos in ($primary-column, $vot//*:FIELD)
             let $colname := jmmc-tap:get-db-colname($f)
             let $datatype := if($primary-key-name = $colname) then " SERIAL PRIMARY KEY" else jmmc-tap:get-db-datatype($f)
-            return map{head(($f/@name,"NONAMEXXXX-"||$pos)) : map{"colname_prefixed":$pos||"_"||$colname, "colname":$colname , "datatype" : $datatype}}
+            return map{$pos : map{"colname_prefixed":$pos||"_"||$colname, "colname":$colname , "datatype" : $datatype}}
         )
 
     let $cols-create :=
-        for $f in $fields-desc?*
-            order by $f?colname
+        for $f at $pos in ( $primary-column, $vot//*:FIELD )
+            let $f := $fields-desc($pos)
             return
                 ("  ", "&quot;"||$f?colname||"&quot;", "          ", $f?datatype ) => string-join(" ")
 
