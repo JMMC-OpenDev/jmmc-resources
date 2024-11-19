@@ -262,11 +262,11 @@ declare function jmmc-tap:get-db-datatype($vot-field)
  :   https://www.postgresql.org/docs/9.1/datatype-numeric.html
  :)
 
-    let $datatype := $vot-field/@datatype
+    let $datatype := lower-case($vot-field/@datatype)
     return
         switch ($datatype)
             case "char"
-            case "unicodeChar"
+            case "unicodechar"
                 return "VARCHAR"
             case "float"
             case "double"
@@ -278,15 +278,18 @@ declare function jmmc-tap:get-db-datatype($vot-field)
                 return "INTEGER"
 
             (: NOT SURE BELOW :)
-            case "unsignedByte"
+            case "unsignedbyte"
                 return "SMALLINT"
 
+            
             case "boolean"
+            case "logical"
             case "bit"
-            case "unsignedByte"
+                return "SMALLINT"
+            
             case "short"
-            case "floatComplex"
-            case "doubleComplex"
+            case "floatcomplex"
+            case "doublecomplex"
                 return "                          "|| $datatype
 
             default
@@ -295,35 +298,59 @@ declare function jmmc-tap:get-db-datatype($vot-field)
 
 
 declare %private function jmmc-tap:_get-table-desc( $table-name , $primary-key-name, $votable){
-  (: search param as primary key or try to search for a single meta.id;meta.main field else. Use id if nothing found :)
-    (: TODO check that id is not already present :)
-    let $primary-key-name := if($primary-key-name) then $primary-key-name
-        else
-        (: search for a single meta.id;meta.main field as fallback :)
-        let $meta_id_main_fields := $votable//*:FIELD[@ucd="meta.id;meta.main"]/@name
-(:        let $log := util:log("info", "meta ids : "||string-join($meta_id_main_fields, ", ")):)
-        return
-            if(count($meta_id_main_fields)=1) then data($meta_id_main_fields) else ()
-
-    let $primary-column := if ($primary-key-name) then
-        if (exists($votable//*:FIELD[@name=$primary-key-name])) then ()
-        else
-            <field datatype="BIGINT">{$primary-key-name}</field>
-        else <field datatype="BIGINT">id</field>
-    let $primary-key-name := if ($primary-key-name) then $primary-key-name else data($primary-column)
-
     let $table-name := if(exists($table-name)) then $table-name else $votable//*:TABLE/@name
     let $table-name := jmmc-tap:get-db-colname($table-name) (: normalize table name like a colname :)
-  (: only last element can be empty :)
-  return ($table-name, $primary-key-name, $primary-column)
 
+    (: use primary-key param as primary key if given to search for the primary field :)
+    (: or try to search for a GROUP named primaryKey                                 :)
+    let $primary-field :=
+        if($primary-key-name)
+        then
+            ( $votable//*:FIELD[@name=$primary-key-name] , <FIELD datatype="BIGINT" name="{$primary-key-name}"><DESCRIPTION>generated primary key</DESCRIPTION></FIELD> )[1]
+        else
+            let $primaryKeyGroupRef := $votable//*:GROUP[@name="primaryKey"]/*:FIELDref/@ref
+
+            (: VOTABLE standard tells :
+            A GROUP element having the name="primaryKey" attribute defines the primary key of the relation
+            by enumerating the ordered list of FIELDrefs that make up the primary key of the table;
+
+            TODO improve to find a way not to use only the first fieldref....
+            :)
+            return
+            if (exists($primaryKeyGroupRef))
+            then $votable//*:FIELD[@id=$primaryKeyGroupRef]
+            else ()
+
+    (: or a uniq meta.id;meta.main field :)
+    let $primary-field := if($primary-field) then $primary-field else
+        let $meta_id_main_fields := $votable//*:FIELD[@ucd="meta.id;meta.main"]
+(:        let $log := util:log("info", "meta ids : "||string-join($meta_id_main_fields, ", ")):)
+        return
+            if(count($meta_id_main_fields)=1) then $meta_id_main_fields else ()
+
+    (: or id field :)
+    let $primary-field := if($primary-field) then $primary-field else $votable//*:FIELD[@name="id"]
+
+    (: else create a new id field if nothing found :)
+    let $primary-field := if($primary-field) then $primary-field else <FIELD datatype="BIGINT" name="id"><DESCRIPTION>default generated primary key</DESCRIPTION></FIELD>
+
+    let $primary-key-name := string($primary-field/@name)
+
+    (: do not return the primary field if it already is in the table :)
+    let $primary-field := if( exists($votable//*:FIELD[@name=$primary-key-name]) ) then () else $primary-field
+
+
+    let $ret := ($table-name, $primary-key-name, $primary-field)
+    let $log := util:log("info", $ret)
+    return
+        $ret
 };
 
 declare %private function jmmc-tap:get-db-row-values($tr, $trs-fields, $fields-desc){
     string-join(
         (
             for $td at $pos in $tr/*:TD
-            let $datatype := $fields-desc($trs-fields[$pos]/@name)?datatype
+            let $datatype := try{$fields-desc($trs-fields[$pos]/@name)?datatype}catch * { util:log("info", " not datatype for field #" || $pos || " (name=" || $trs-fields[$pos]/@name ) }
             return
                 switch ($datatype)
                     case "VARCHAR" return concat("'", $td, "'")
@@ -397,7 +424,7 @@ declare
     let $fields-desc := map:merge(
         for $f at $pos in ($primary-column, $vot//*:FIELD)
             let $colname := jmmc-tap:get-db-colname($f)
-            let $datatype := if($primary-key-name = $colname) then " SERIAL PRIMARY KEY" else jmmc-tap:get-db-datatype($f)
+            let $datatype := if($primary-key-name = $colname) then jmmc-tap:get-db-datatype($f) || " PRIMARY KEY" else jmmc-tap:get-db-datatype($f)
             return map{$pos : map{"colname_prefixed":$pos||"_"||$colname, "colname":$colname , "datatype" : $datatype}}
         )
 
@@ -463,7 +490,7 @@ declare
     let $cvalues :=
         for $f at $col_index in ( $primary-column, $vot//*:FIELD )
             let $colname := jmmc-tap:get-db-colname($f)
-            let $desc := replace($f/*:DESCRIPTION||"", "'", "''")
+            let $desc := normalize-space(replace($f/*:DESCRIPTION||"", "'", "''"))
             let $unit := $f/@unit||""
             let $ucd := $f/@ucd||""
             let $utype := $f/@utype||""
@@ -471,8 +498,9 @@ declare
             let $datatype := tokenize(jmmc-tap:get-db-datatype($f)," ")[1]
             let $size := -1
             let $principal := if($colname=$primary-key-name) then 1 else 0
+            let $indexed := if($colname=$primary-key-name) then 1 else 0
 
-            let $v := ($table-name, $colname, $desc, $unit, $ucd, $utype, $datatype, $size, $principal,0,0, $col_index) ! concat("&apos;", ., "&apos;")
+            let $v := ($table-name, $colname, $desc, $unit, $ucd, $utype, $datatype, $size, $principal,$indexed,0, $col_index) ! concat("&apos;", ., "&apos;")
         return
             "(" || string-join($v, ", ") || ")"
 
