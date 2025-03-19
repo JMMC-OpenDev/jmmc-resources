@@ -311,9 +311,9 @@ declare function adsabs:library-get-bibcodes($name-or-id, $use-cache as xs:boole
 declare function adsabs:library-get-search-expr($name-or-id)
 {
     let $id := adsabs:get-libraries()?libraries?*[?name=$name-or-id or ?id=$name-or-id]?id
+    let $id := if (exists($id)) then $id else $name-or-id
     return "docs(library/"||$id||")"
 };
-
 
 
 declare function adsabs:create-library($name as xs:string, $description  as xs:string, $public as xs:boolean, $bibcodes as xs:string*){
