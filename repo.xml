@@ -11,6 +11,12 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.47.2">
+            <ul xmlns="">
+              <li>adsabs : accept to query a library id even if it is not part of the ones associated to the ads token.</li>
+              <li>jmmc-ws : add getstar basic implementation.</li>
+            </ul>
+        </change>
         <change version="0.47.1">
             <ul xmlns="">
               <li>jmmc-tap : tap-adql-query() use optional votable-name with priority if provided.</li>
