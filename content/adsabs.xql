@@ -81,9 +81,11 @@ declare function adsabs:query( $query-url as xs:string, $query-payload as xs:str
                 else
                     ()
             let $method := if (exists($body)) then $method-if-payload else "GET"
+	    (: apply line-o's fix to workarround the 2025-04-12 ADS infrastructure change 
+               https://github.com/eXist-db/exist/issues/5722 :)
             let $request :=
-        		<http:request method="{$method}" href="{$adsabs:API_ROOT}{$query-url}">
-        			<http:header name="Authorization" value="Bearer:{$adsabs:token}"/>
+        		<http:request method="{$method}" href="{$adsabs:API_ROOT}{$query-url}" override-media-type="application/json; charset=utf-8; boundary=--">
+        			<http:header name="Authorization" value="Bearer {$adsabs:token}"/>
             		<http:header name="Content-Type" value="application/json"/>
             		{$body}
         		</http:request>
@@ -96,7 +98,7 @@ declare function adsabs:query( $query-url as xs:string, $query-payload as xs:str
         	            then
         	                (: let $log := util:log("info", "response from ads : ") :)
         	                let $json := util:binary-to-string($response-body)
-                            (: let $log := util:log("info", $json ) :)
+                                (: let $log := util:log("info", $json ) :)
         	                let $cache := cache:put($adsabs:expirable-cache-name, $key, $json) (: always cache last result :)
                             return $json
         	            else
@@ -266,12 +268,13 @@ declare function adsabs:library($name-or-id, $use-cache as xs:boolean)
     let $id := adsabs:get-libraries()?libraries?*[?name=$name-or-id or ?id=$name-or-id]?id
     return parse-json(adsabs:query("/biblib/libraries/"||$id, (), $use-cache))
 };
-declare function adsabs:library-id($name){
-    adsabs:get-libraries()?libraries?*[?public=true() and ?name[.=$name] ]?id
+declare function adsabs:library-id($name-or-id){
+    (adsabs:get-libraries()?libraries?*[?public=true() and ( ?name=$name-or-id or ?id=$name-or-id )]?id,$name-or-id)[1]
+
 };
 
-declare function adsabs:library-query($name){
-    "docs(library/"||adsabs:library-id($name)||")"
+declare function adsabs:library-query($name-or-id){
+    "docs(library/"||adsabs:library-id($name-or-id)||")"
 };
 
 declare function adsabs:library-get-permissions($name-or-id)
@@ -312,7 +315,7 @@ declare function adsabs:library-get-search-expr($name-or-id)
 {
     let $id := adsabs:get-libraries()?libraries?*[?name=$name-or-id or ?id=$name-or-id]?id
     let $id := if (exists($id)) then $id else $name-or-id
-    return "docs(library/"||$id||")"
+    return adsabs:library-query($id)
 };
 
 
