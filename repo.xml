@@ -11,6 +11,11 @@
     <prepare/>
     <finish>post-install.xql</finish>
     <changelog>
+        <change version="0.48.0">
+            <ul xmlns="">
+              <li>adsabs : fix ADS code to work after it's server upgrade on 12th April 2025. Thanks to @line-o for the solution on the hard point.</li>
+            </ul>
+        </change>
         <change version="0.47.2">
             <ul xmlns="">
               <li>adsabs : accept to query a library id even if it is not part of the ones associated to the ads token.</li>
